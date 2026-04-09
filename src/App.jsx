@@ -124,7 +124,7 @@ function DividerDark() { return <div style={{ height: 1, background: "rgba(247,2
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 
-function LoginScreen({ onComplete, onSwitch }) {
+function LoginScreen({ onComplete, onSwitch, onBack }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [err, setErr] = useState("");
 
@@ -189,14 +189,14 @@ function LoginScreen({ onComplete, onSwitch }) {
           </div>
         </div>
         <div style={{ marginTop: "3rem", textAlign: "right" }}>
-          <button onClick={onSwitch} style={{ background: "none", border: "none", color: G.muted, cursor: "pointer", fontSize: 11, fontFamily: font.sans }}>← Retour à l'accueil</button>
+          <button onClick={onBack} style={{ background: "none", border: "none", color: G.muted, cursor: "pointer", fontSize: 11, fontFamily: font.sans }}>← Retour à l'accueil</button>
         </div>
         <p style={{ position: "fixed", bottom: "1rem", right: "1rem", fontSize: 11, color: G.muted, fontFamily: "DM Sans, sans-serif", margin: 0 }}>Conçu par Bellaïche Kévin</p>
       </div>
     </div>
   );
 }
-function OnboardingScreen({ onComplete }) {
+function OnboardingScreen({ onComplete, onBack }) {
   const [mode, setMode] = useState(null); // 'candidat' | 'recruteur'
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ name: "", email: "", password: "", sector: "", motivation: "", company: "" });
@@ -254,7 +254,7 @@ function OnboardingScreen({ onComplete }) {
   return (
     <div style={{ ...s.page, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <div style={{ maxWidth: 440, width: "100%" }}>
-        <button onClick={() => setMode(null)} style={{ ...s.btnGhost, marginBottom: "2rem", fontSize: 12 }}>← Retour</button>
+        <button onClick={onBack} style={{ ...s.btnGhost, marginBottom: "1rem", fontSize: 12 }}>← Retour à l'accueil</button>
         <div style={s.eyebrow}><div style={{ width: 24, height: 1, background: G.muted }} />{mode === "candidat" ? "Création de compte candidat" : "Création de compte recruteur"}</div>
         <h2 style={{ fontFamily: font.serif, fontSize: 28, letterSpacing: -0.5, marginBottom: "2rem", color: G.ink }}>
           {mode === "candidat" ? "Dis-nous qui tu es." : "Parle-nous de ton entreprise."}
@@ -319,7 +319,7 @@ function OnboardingScreen({ onComplete }) {
 
 // ─── SIDEBAR ─────────────────────────────────────────────────────────────────
 
-function Sidebar({ user, page, setPage, onLogout }) {
+function Sidebar({ user, page, setPage, onLogout, onHome }) {
   const links = user.mode === "candidat"
     ? [["dashboard", "Tableau de bord"], ["defis", "Mes défis"], ["offres", "Offres"], ["profil", "Mon profil"]]
     : [["dashboard", "Tableau de bord"], ["offres", "Mes offres"], ["candidats", "Candidats"], ["nouvelle-offre", "Créer une offre"]];
@@ -351,6 +351,9 @@ function Sidebar({ user, page, setPage, onLogout }) {
         <div style={{ fontSize: 11, color: "rgba(247,245,240,0.3)", marginBottom: 12 }}>{user.email}</div>
         <button onClick={onLogout} style={{ fontSize: 12, color: "rgba(247,245,240,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: font.sans }}>
           Déconnexion
+          <button onClick={onHome} style={{ fontSize: 12, color: "rgba(247,245,240,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: font.sans, marginTop: 8, display: "block" }}>
+  ← Page d'accueil
+</button>
         </button>
       </div>
     </div>
@@ -1213,8 +1216,8 @@ export default function App() {
   }
 
   if (screen === "landing") return <LandingPage onEnter={handleEnter} />;
-  if (screen === "login") return <LoginScreen onComplete={handleLogin} onSwitch={() => setScreen("auth")} />;
-  if (screen === "auth") return <OnboardingScreen onComplete={handleLogin} />;
+  if (screen === "login") return <LoginScreen onComplete={handleLogin} onSwitch={() => setScreen("auth")} onBack={() => setScreen("landing")} />;
+  if (screen === "auth") return <OnboardingScreen onComplete={handleLogin} onBack={() => setScreen("landing")} />;
 
   const renderPage = () => {
     if (user.mode === "candidat") {
@@ -1233,7 +1236,7 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: font.sans, background: G.paper }}>
-      <Sidebar user={user} page={page} setPage={setPage} onLogout={handleLogout} />
+      <Sidebar user={user} page={page} setPage={setPage} onLogout={handleLogout} onHome={() => setScreen("landing")} />
       <main style={{ flex: 1, overflow: "auto" }}>
         {renderPage()}
       </main>
