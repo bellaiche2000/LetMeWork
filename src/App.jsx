@@ -991,7 +991,7 @@ function LandingPage({ onEnter }) {
       </div>
 
       {/* PROBLEM */}
-      <section style={{ padding: "8rem 4rem", display: "grid", gridTemplateColumns: "1fr", gap: "3rem", alignItems: "start", maxWidth: 1100, margin: "0 auto" }}
+      <section style={{ padding: "8rem 4rem", display: "grid", gridTemplateColumns: "1fr ", gap: "3rem", alignItems: "start", maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ position: "sticky", top: "8rem" }}>
           <div ref={ref("pb-eye")} style={{ ...s.eyebrow, ...anim("pb-eye") }}>
             <div style={{ width: 24, height: 1, background: G.muted }} />Le vrai problème
