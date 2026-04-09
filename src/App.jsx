@@ -159,7 +159,7 @@ function OnboardingScreen({ onComplete }) {
           ))}
         </div>
       </div>
-      <p style={{ fontSize: 11, color: G.muted, marginTop: "3rem", textAlign: "right", width: "100%", maxWidth: 480, fontFamily: "DM Sans, sans-serif" }}>Conçu par Bellaïche Kévin</p>
+      <p style={{ position: "fixed", bottom: "1rem", right: "1rem", fontSize: 11, color: G.muted, fontFamily: "DM Sans, sans-serif", margin: 0 }}>Conçu par Bellaïche Kévin</p>
     </div>
   );
 
