@@ -123,6 +123,62 @@ function DividerDark() { return <div style={{ height: 1, background: "rgba(247,2
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 
+function LoginScreen({ onComplete, onSwitch }) {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [err, setErr] = useState("");
+
+  function submit() {
+    if (!form.email || !form.password) { setErr("Remplis tous les champs."); return; }
+    setErr("");
+    onComplete({ ...form, name: form.email.split("@")[0], mode: "candidat", id: Date.now() });
+  }
+
+  return (
+    <div style={{ ...s.page, display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: "2rem" }}>
+      <div style={{ maxWidth: 400, width: "100%" }}>
+        <div style={{ fontFamily: font.serif, fontSize: 20, color: G.ink, marginBottom: "2.5rem" }}>
+          Let<em style={{ fontStyle: "italic", color: G.muted }}>Me</em>Work
+        </div>
+        <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Connexion</div>
+        <h2 style={{ fontFamily: font.serif, fontSize: 28, letterSpacing: -0.5, marginBottom: "2rem", color: G.ink }}>
+          Content de te revoir.
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label style={s.label}>Email</label>
+            <input style={s.input} type="email" placeholder="ton@email.com" value={form.email}
+              onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+              onFocus={e => e.target.style.borderColor = G.ink}
+              onBlur={e => e.target.style.borderColor = G.paper3} />
+          </div>
+          <div>
+            <label style={s.label}>Mot de passe</label>
+            <input style={s.input} type="password" placeholder="••••••••" value={form.password}
+              onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+              onFocus={e => e.target.style.borderColor = G.ink}
+              onBlur={e => e.target.style.borderColor = G.paper3} />
+          </div>
+          {err && <div style={{ fontSize: 13, color: G.danger, padding: "8px 12px", background: G.dangerBg, borderRadius: 2 }}>{err}</div>}
+          <button style={{ ...s.btnPrimary, padding: 12, marginTop: 4 }} onClick={submit}
+            onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
+            onMouseLeave={e => e.currentTarget.style.opacity = 1}>
+            Se connecter →
+          </button>
+          <div style={{ textAlign: "center", fontSize: 13, color: G.muted, marginTop: 8 }}>
+            Pas encore de compte ?{" "}
+            <button onClick={onSwitch} style={{ background: "none", border: "none", color: G.ink, cursor: "pointer", fontSize: 13, fontFamily: font.sans, textDecoration: "underline" }}>
+              Rejoindre LetMeWork
+            </button>
+          </div>
+        </div>
+        <div style={{ marginTop: "3rem", textAlign: "right" }}>
+          <button onClick={onSwitch} style={{ background: "none", border: "none", color: G.muted, cursor: "pointer", fontSize: 11, fontFamily: font.sans }}>← Retour à l'accueil</button>
+        </div>
+        <p style={{ position: "fixed", bottom: "1rem", right: "1rem", fontSize: 11, color: G.muted, fontFamily: "DM Sans, sans-serif", margin: 0 }}>Conçu par Bellaïche Kévin</p>
+      </div>
+    </div>
+  );
+}
 function OnboardingScreen({ onComplete }) {
   const [mode, setMode] = useState(null); // 'candidat' | 'recruteur'
   const [step, setStep] = useState(0);
@@ -1090,8 +1146,8 @@ export default function App() {
   const [jobs, setJobs] = useState(DEFAULT_JOBS);
 
   function handleEnter(mode) {
-    setScreen("auth");
-  }
+  setScreen(mode === "login" ? "login" : "auth");
+}
 
   function handleLogin(userData) {
     setUser(userData);
@@ -1124,6 +1180,7 @@ export default function App() {
   }
 
   if (screen === "landing") return <LandingPage onEnter={handleEnter} />;
+  if (screen === "login") return <LoginScreen onComplete={handleLogin} onSwitch={() => setScreen("auth")} />;
   if (screen === "auth") return <OnboardingScreen onComplete={handleLogin} />;
 
   const renderPage = () => {
