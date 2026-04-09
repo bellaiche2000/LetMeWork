@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "./supabase";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
@@ -127,11 +128,27 @@ function LoginScreen({ onComplete, onSwitch }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [err, setErr] = useState("");
 
-  function submit() {
-    if (!form.email || !form.password) { setErr("Remplis tous les champs."); return; }
-    setErr("");
-    onComplete({ ...form, name: form.email.split("@")[0], mode: "candidat", id: Date.now() });
-  }
+  async function submit() {
+  if (!form.email || !form.password) { setErr("Remplis tous les champs."); return; }
+  setErr("");
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: form.email,
+    password: form.password,
+  });
+
+  if (error) { setErr("Email ou mot de passe incorrect."); return; }
+  
+  const meta = data.user.user_metadata;
+  onComplete({
+    email: form.email,
+    name: meta.name || form.email.split("@")[0],
+    mode: meta.mode || "candidat",
+    sector: meta.sector || "",
+    company: meta.company || "",
+    id: data.user.id,
+  });
+}
 
   return (
     <div style={{ ...s.page, display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: "2rem" }}>
@@ -185,13 +202,29 @@ function OnboardingScreen({ onComplete }) {
   const [form, setForm] = useState({ name: "", email: "", password: "", sector: "", motivation: "", company: "" });
   const [err, setErr] = useState("");
 
-  function submit() {
-    if (!form.name || !form.email || !form.password) { setErr("Remplis tous les champs obligatoires."); return; }
-    if (mode === "candidat" && !form.sector) { setErr("Choisis un secteur."); return; }
-    if (mode === "recruteur" && !form.company) { setErr("Indique le nom de ton entreprise."); return; }
-    setErr("");
-    onComplete({ ...form, mode, id: Date.now() });
-  }
+ async function submit() {
+  if (!form.name || !form.email || !form.password) { setErr("Remplis tous les champs obligatoires."); return; }
+  if (mode === "candidat" && !form.sector) { setErr("Choisis un secteur."); return; }
+  if (mode === "recruteur" && !form.company) { setErr("Indique le nom de ton entreprise."); return; }
+  setErr("");
+  
+  const { data, error } = await supabase.auth.signUp({
+    email: form.email,
+    password: form.password,
+    options: {
+      data: {
+        name: form.name,
+        mode: mode,
+        sector: form.sector || "",
+        company: form.company || "",
+        motivation: form.motivation || "",
+      }
+    }
+  });
+
+  if (error) { setErr(error.message); return; }
+  onComplete({ ...form, mode, id: data.user.id });
+}
 
   if (!mode) return (
     <div style={{ ...s.page, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: "2rem" }}>
