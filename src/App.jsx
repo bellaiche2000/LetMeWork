@@ -1006,11 +1006,11 @@ function LandingPage({ onEnter }) {
   }
 
   function anim(id, delay = 0) {
-    return {
-      opacity: visible[id] ? 1 : 0,
-      transform: visible[id] ? "translateY(0)" : "translateY(20px)",
-      transition: `opacity 0.7s ${delay}s ease, transform 0.7s ${delay}s ease`,
-    };
+  return {
+    opacity: 1,
+    transform: "translateY(0)",
+  };
+}
   }
 
   const marqueeItems = ["Potentiel", "Culture fit", "Mise en situation", "Reconversion", "Matching intelligent", "Évaluation hybride", "Premier emploi", "Score de fit"];
