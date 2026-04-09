@@ -1038,13 +1038,13 @@ function LandingPage({ onEnter }) {
       {/* HERO */}
       <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "10rem 4rem 5rem", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(17,17,16,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,16,0.04) 1px, transparent 1px)", backgroundSize: "60px 60px", pointerEvents: "none" }} />
-        <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: G.muted, marginBottom: "2rem", display: "flex", alignItems: "center", gap: 12, opacity: 1, animation: "fadeUp 0.8s 0.2s ease both" }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: G.muted, marginBottom: "2rem", display: "flex", alignItems: "center", gap: 12, opacity: 1 }}>
           <div style={{ width: 32, height: 1, background: G.muted }} />Beta — Accès anticipé
         </div>
-        <h1 style={{ fontFamily: font.serif, fontSize: "clamp(56px, 9vw, 110px)", lineHeight: 0.92, letterSpacing: -2, maxWidth: 900, animation: "fadeUp 0.9s 0.35s ease both", opacity: 1 }}>
+        <h1 style={{ fontFamily: font.serif, fontSize: "clamp(56px, 9vw, 110px)", lineHeight: 0.92, letterSpacing: -2, maxWidth: 900, opacity: 1 }}>
           Le potentiel<br />avant <em style={{ fontStyle: "italic", color: G.muted }}>le papier.</em>
         </h1>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid rgba(17,17,16,0.1)`, animation: "fadeUp 0.8s 0.5s ease both", opacity: 1, flexWrap: "wrap", gap: "2rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid rgba(17,17,16,0.1)`, opacity: 1, flexWrap: "wrap", gap: "2rem" }}>
           <p style={{ fontSize: 16, fontWeight: 300, color: G.muted, maxWidth: 400, lineHeight: 1.75 }}>LetMeWork connecte les talents motivés avec les entreprises qui cherchent le vrai match — pas juste le bon profil sur le papier.</p>
           <div style={{ display: "flex", gap: 12 }}>
             <button onClick={() => onEnter("signup")} style={{ ...s.btnPrimary, padding: "13px 28px" }}
@@ -1059,7 +1059,7 @@ function LandingPage({ onEnter }) {
             </button>
           </div>
         </div>
-        <div style={{ display: "flex", gap: "4rem", marginTop: "4rem", animation: "fadeUp 0.8s 0.65s ease both", opacity: 1, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "4rem", marginTop: "4rem", opacity: 1, flexWrap: "wrap" }}>
           {[["73%", "des recrutements ratent à cause d'un mauvais fit"], ["2×", "plus de chances avec une mise en situation"], ["0", "expérience requise pour montrer ton potentiel"]].map(([n, l]) => (
             <div key={n}>
               <div style={{ fontFamily: font.serif, fontSize: 34, letterSpacing: -1, color: G.ink }}>{n}</div>
