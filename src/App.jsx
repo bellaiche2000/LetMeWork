@@ -1011,7 +1011,7 @@ function LandingPage({ onEnter }) {
     transform: "translateY(0)",
   };
 }
-  }
+  
 
   const marqueeItems = ["Potentiel", "Culture fit", "Mise en situation", "Reconversion", "Matching intelligent", "Évaluation hybride", "Premier emploi", "Score de fit"];
 
