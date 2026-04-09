@@ -949,6 +949,9 @@ export default function App() {
       <main style={{ flex: 1, overflow: "auto" }}>
         {renderPage()}
       </main>
+      <footer style={{ padding: "1rem 2rem", background: "#111110", borderTop: "1px solid rgba(247,245,240,0.06)", display: "flex", justifyContent: "flex-end" }}>
+  <span style={{ fontSize: 11, color: "rgba(247,245,240,0.2)", fontFamily: "DM Sans, sans-serif" }}>Conçu par Bellaïche Kévin</span>
+</footer>
     </div>
   );
 }
