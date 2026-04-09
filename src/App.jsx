@@ -159,7 +159,6 @@ function OnboardingScreen({ onComplete }) {
           ))}
         </div>
       </div>
-      <p style={{ position: "fixed", bottom: "1rem", right: "1rem", fontSize: 11, color: G.muted, fontFamily: "DM Sans, sans-serif", margin: 0 }}>Conçu par Bellaïche Kévin</p>
     </div>
   );
 
@@ -894,18 +893,215 @@ function CandidatsPage({ jobs, user }) {
 
 // ─── APP ──────────────────────────────────────────────────────────────────────
 
+// ─── LANDING PAGE ─────────────────────────────────────────────────────────────
+
+function LandingPage({ onEnter }) {
+  const [visible, setVisible] = useState({});
+  const refs = useRef({});
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) setVisible(p => ({ ...p, [e.target.dataset.id]: true }));
+      });
+    }, { threshold: 0.12 });
+    Object.values(refs.current).forEach(el => el && obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  function ref(id) {
+    return el => { if (el) { el.dataset.id = id; refs.current[id] = el; } };
+  }
+
+  function anim(id, delay = 0) {
+    return {
+      opacity: visible[id] ? 1 : 0,
+      transform: visible[id] ? "translateY(0)" : "translateY(20px)",
+      transition: `opacity 0.7s ${delay}s ease, transform 0.7s ${delay}s ease`,
+    };
+  }
+
+  const marqueeItems = ["Potentiel", "Culture fit", "Mise en situation", "Reconversion", "Matching intelligent", "Évaluation hybride", "Premier emploi", "Score de fit"];
+
+  return (
+    <div style={{ fontFamily: font.sans, background: G.paper, color: G.ink, overflowX: "hidden" }}>
+
+      {/* NAV */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.25rem 3rem", background: "rgba(247,245,240,0.9)", backdropFilter: "blur(16px)", borderBottom: `1px solid rgba(17,17,16,0.06)` }}>
+        <div style={{ fontFamily: font.serif, fontSize: 20, color: G.ink }}>Let<em style={{ fontStyle: "italic", color: G.muted }}>Me</em>Work</div>
+        <div style={{ display: "flex", gap: 12 }}>
+          <button onClick={() => onEnter("login")} style={{ ...s.btnGhost, padding: "8px 20px", fontSize: 13 }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = G.ink; e.currentTarget.style.color = G.ink; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = G.paper3; e.currentTarget.style.color = G.muted; }}>
+            Se connecter
+          </button>
+          <button onClick={() => onEnter("signup")} style={{ ...s.btnPrimary, padding: "8px 20px", fontSize: 13 }}
+            onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
+            onMouseLeave={e => e.currentTarget.style.opacity = 1}>
+            Rejoindre →
+          </button>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "10rem 4rem 5rem", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(17,17,16,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,16,0.04) 1px, transparent 1px)", backgroundSize: "60px 60px", pointerEvents: "none" }} />
+        <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: G.muted, marginBottom: "2rem", display: "flex", alignItems: "center", gap: 12, opacity: 1, animation: "fadeUp 0.8s 0.2s ease both" }}>
+          <div style={{ width: 32, height: 1, background: G.muted }} />Beta — Accès anticipé
+        </div>
+        <h1 style={{ fontFamily: font.serif, fontSize: "clamp(56px, 9vw, 110px)", lineHeight: 0.92, letterSpacing: -2, maxWidth: 900, animation: "fadeUp 0.9s 0.35s ease both", opacity: 1 }}>
+          Le potentiel<br />avant <em style={{ fontStyle: "italic", color: G.muted }}>le papier.</em>
+        </h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid rgba(17,17,16,0.1)`, animation: "fadeUp 0.8s 0.5s ease both", opacity: 1, flexWrap: "wrap", gap: "2rem" }}>
+          <p style={{ fontSize: 16, fontWeight: 300, color: G.muted, maxWidth: 400, lineHeight: 1.75 }}>LetMeWork connecte les talents motivés avec les entreprises qui cherchent le vrai match — pas juste le bon profil sur le papier.</p>
+          <div style={{ display: "flex", gap: 12 }}>
+            <button onClick={() => onEnter("signup")} style={{ ...s.btnPrimary, padding: "13px 28px" }}
+              onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
+              onMouseLeave={e => e.currentTarget.style.opacity = 1}>
+              Je veux tester →
+            </button>
+            <button onClick={() => onEnter("login")} style={{ ...s.btnGhost, padding: "13px 28px" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = G.ink; e.currentTarget.style.color = G.ink; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = G.paper3; e.currentTarget.style.color = G.muted; }}>
+              Se connecter
+            </button>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: "4rem", marginTop: "4rem", animation: "fadeUp 0.8s 0.65s ease both", opacity: 1, flexWrap: "wrap" }}>
+          {[["73%", "des recrutements ratent à cause d'un mauvais fit"], ["2×", "plus de chances avec une mise en situation"], ["0", "expérience requise pour montrer ton potentiel"]].map(([n, l]) => (
+            <div key={n}>
+              <div style={{ fontFamily: font.serif, fontSize: 34, letterSpacing: -1, color: G.ink }}>{n}</div>
+              <div style={{ fontSize: 12, color: G.muted, marginTop: 4, maxWidth: 140, lineHeight: 1.5 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+        <style>{`@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }`}</style>
+      </section>
+
+      {/* MARQUEE */}
+      <div style={{ overflow: "hidden", borderTop: `1px solid rgba(17,17,16,0.08)`, borderBottom: `1px solid rgba(17,17,16,0.08)`, padding: "0.9rem 0", background: G.paper2 }}>
+        <div style={{ display: "flex", animation: "marquee 28s linear infinite", width: "max-content" }}>
+          {[...marqueeItems, ...marqueeItems].map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: "2rem", padding: "0 2.5rem", fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: G.muted, whiteSpace: "nowrap" }}>
+              {item}<div style={{ width: 3, height: 3, borderRadius: "50%", background: G.paper3 }} />
+            </div>
+          ))}
+        </div>
+        <style>{`@keyframes marquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }`}</style>
+      </div>
+
+      {/* PROBLEM */}
+      <section style={{ padding: "8rem 4rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6rem", alignItems: "start", maxWidth: 1100, margin: "0 auto" }}>
+        <div style={{ position: "sticky", top: "8rem" }}>
+          <div ref={ref("pb-eye")} style={{ ...s.eyebrow, ...anim("pb-eye") }}>
+            <div style={{ width: 24, height: 1, background: G.muted }} />Le vrai problème
+          </div>
+          <h2 ref={ref("pb-title")} style={{ fontFamily: font.serif, fontSize: "clamp(32px, 4vw, 48px)", lineHeight: 1.05, letterSpacing: -1, ...anim("pb-title", 0.1) }}>
+            Les sites d'emploi filtrent.<br />Ils ne <em style={{ fontStyle: "italic", color: G.muted }}>révèlent</em> pas.
+          </h2>
+        </div>
+        <div>
+          {[
+            ["01", "Les algorithmes éliminent les bons profils", "Un mot-clé manquant et ton dossier part à la poubelle — avant même qu'un humain le lise."],
+            ["02", "Le cercle vicieux de l'expérience", "Pas d'expérience → pas de job → pas d'expérience. Impossible d'entrer dans la boucle sans la bonne case cochée."],
+            ["03", "Le bon profil, la mauvaise personne", "Embauché sur le CV, licencié pour le caractère. Tout le monde perd du temps sur des erreurs de casting évitables."],
+          ].map(([n, title, text], i) => (
+            <div key={n} ref={ref(`pb-${i}`)} style={{ padding: "2rem 0", borderBottom: `1px solid rgba(17,17,16,0.08)`, display: "grid", gridTemplateColumns: "2rem 1fr", gap: "1.5rem", ...anim(`pb-${i}`, i * 0.1) }}>
+              <div style={{ fontFamily: font.serif, fontSize: 14, color: G.muted, paddingTop: 2 }}>{n}</div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: G.ink, marginBottom: 6 }}>{title}</div>
+                <div style={{ fontSize: 13, color: G.muted, lineHeight: 1.7, fontWeight: 300 }}>{text}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* HISTOIRE */}
+      <section style={{ padding: "8rem 4rem", background: G.ink, color: G.paper }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div ref={ref("h-eye")} style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(247,245,240,0.3)", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: 10, ...anim("h-eye") }}>
+            <div style={{ width: 24, height: 1, background: "rgba(247,245,240,0.2)" }} />Pourquoi LetMeWork
+          </div>
+          <h2 ref={ref("h-title")} style={{ fontFamily: font.serif, fontSize: "clamp(32px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: -1, color: G.paper, marginBottom: "2.5rem", ...anim("h-title", 0.1) }}>
+            Une idée née d'une<br /><em style={{ fontStyle: "italic", color: "rgba(247,245,240,0.35)" }}>frustration personnelle.</em>
+          </h2>
+          <div ref={ref("h-text")} style={{ ...anim("h-text", 0.2) }}>
+            {[
+              "Je m'appelle Kévin. Et comme beaucoup, j'ai vécu cette situation : envoyer des candidatures, attendre, ne jamais avoir de retour. Pas parce que je n'avais rien à apporter — mais parce que mon profil ne cochait pas les bonnes cases.",
+              "J'ai réalisé que le problème n'était pas les candidats. C'était le système. Des algorithmes qui filtrent sur des mots-clés, des recruteurs qui cherchent 5 ans d'expérience pour un premier poste, des gens ultra-motivés qui passent entre les mailles du filet.",
+              "Alors j'ai eu cette idée simple : et si on jugeait les gens sur ce qu'ils sont capables de faire, pas sur ce qu'ils ont déjà fait ? Et si un recruteur pouvait voir ta niaque, tes valeurs, ta façon de penser — avant même de lire ton CV ?",
+              "C'est LetMeWork. Pas une révolution. Juste une chance donnée à ceux qui la méritent.",
+            ].map((para, i) => (
+              <p key={i} style={{ fontSize: 16, color: i === 3 ? G.paper : "rgba(247,245,240,0.55)", lineHeight: 1.85, fontWeight: 300, marginBottom: "1.5rem", fontStyle: i === 3 ? "italic" : "normal", fontFamily: i === 3 ? font.serif : font.sans, fontSize: i === 3 ? 20 : 15 }}>{para}</p>
+            ))}
+          </div>
+          <div ref={ref("h-sig")} style={{ marginTop: "2rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(247,245,240,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center", ...anim("h-sig", 0.3) }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: G.paper }}>Bellaïche Kévin</div>
+              <div style={{ fontSize: 12, color: "rgba(247,245,240,0.3)", marginTop: 2 }}>Fondateur, LetMeWork</div>
+            </div>
+            <button onClick={() => onEnter("signup")} style={{ ...s.btnPrimary, background: G.paper, color: G.ink, padding: "10px 24px" }}
+              onMouseEnter={e => e.currentTarget.style.opacity = 0.8}
+              onMouseLeave={e => e.currentTarget.style.opacity = 1}>
+              Rejoindre l'aventure →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA FINAL */}
+      <section style={{ padding: "8rem 4rem", textAlign: "center", background: G.paper }}>
+        <div ref={ref("cta")} style={{ maxWidth: 560, margin: "0 auto", ...anim("cta") }}>
+          <h2 style={{ fontFamily: font.serif, fontSize: "clamp(36px, 5vw, 60px)", letterSpacing: -1.5, lineHeight: 1.05, marginBottom: "1rem" }}>
+            Prêt à montrer ce que tu <em style={{ fontStyle: "italic", color: G.muted }}>vaux vraiment ?</em>
+          </h2>
+          <p style={{ fontSize: 15, color: G.muted, fontWeight: 300, lineHeight: 1.7, marginBottom: "2.5rem" }}>Rejoins LetMeWork et découvre un recrutement basé sur qui tu es, pas sur ce que tu as fait.</p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={() => onEnter("signup")} style={{ ...s.btnPrimary, padding: "13px 32px", fontSize: 14 }}
+              onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
+              onMouseLeave={e => e.currentTarget.style.opacity = 1}>
+              Je cherche un emploi →
+            </button>
+            <button onClick={() => onEnter("signup")} style={{ ...s.btnGhost, padding: "13px 32px", fontSize: 14 }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = G.ink; e.currentTarget.style.color = G.ink; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = G.paper3; e.currentTarget.style.color = G.muted; }}>
+              Je recrute
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ padding: "1.5rem 4rem", background: G.ink, borderTop: `1px solid rgba(247,245,240,0.06)`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontFamily: font.serif, fontSize: 16, color: G.paper }}>Let<em style={{ fontStyle: "italic", color: "rgba(247,245,240,0.3)" }}>Me</em>Work</div>
+        <div style={{ fontSize: 11, color: "rgba(247,245,240,0.2)" }}>Conçu par Bellaïche Kévin</div>
+      </footer>
+    </div>
+  );
+}
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+
 export default function App() {
+  const [screen, setScreen] = useState("landing"); // landing | auth | app
   const [user, setUser] = useState(null);
   const [page, setPage] = useState("dashboard");
   const [jobs, setJobs] = useState(DEFAULT_JOBS);
 
+  function handleEnter(mode) {
+    setScreen("auth");
+  }
+
   function handleLogin(userData) {
     setUser(userData);
+    setScreen("app");
     setPage("dashboard");
   }
 
   function handleLogout() {
     setUser(null);
+    setScreen("landing");
     setPage("dashboard");
   }
 
@@ -927,7 +1123,8 @@ export default function App() {
     setUser(p => ({ ...p, ...data }));
   }
 
-  if (!user) return <OnboardingScreen onComplete={handleLogin} />;
+  if (screen === "landing") return <LandingPage onEnter={handleEnter} />;
+  if (screen === "auth") return <OnboardingScreen onComplete={handleLogin} />;
 
   const renderPage = () => {
     if (user.mode === "candidat") {
@@ -950,9 +1147,6 @@ export default function App() {
       <main style={{ flex: 1, overflow: "auto" }}>
         {renderPage()}
       </main>
-      <footer style={{ padding: "1rem 2rem", background: "#111110", borderTop: "1px solid rgba(247,245,240,0.06)", display: "flex", justifyContent: "flex-end" }}>
-  <span style={{ fontSize: 11, color: "rgba(247,245,240,0.2)", fontFamily: "DM Sans, sans-serif" }}>Conçu par Bellaïche Kévin</span>
-</footer>
     </div>
   );
 }
