@@ -985,157 +985,293 @@ function CandidatsPage({ jobs, user }) {
 
 // ─── APP ──────────────────────────────────────────────────────────────────────
 
-// ─── LANDING PAGE ─────────────────────────────────────────────────────────────
+/// ─── LANDING PAGE V3 — DARK PREMIUM ──────────────────────────────────────────
+// Replace the existing LandingPage function in App.jsx with this one
 
 function LandingPage({ onEnter }) {
-  const [visible, setVisible] = useState({});
-  const refs = useRef({});
+  const cursorRef = useRef(null);
+  const cursorDotRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [loaded, setLoaded] = useState(false);
+  const [heroText] = useState("Le potentiel avant le papier.");
+  const [displayedChars, setDisplayedChars] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
+  const [hoveredBtn, setHoveredBtn] = useState(null);
 
+  // Cursor
+  useEffect(() => {
+    let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    let tx = cx, ty = cy;
+    const move = (e) => { tx = e.clientX; ty = e.clientY; };
+    window.addEventListener("mousemove", move);
+    let raf;
+    const animate = () => {
+      cx += (tx - cx) * 0.12;
+      cy += (ty - cy) * 0.12;
+      if (cursorRef.current) { cursorRef.current.style.left = tx + "px"; cursorRef.current.style.top = ty + "px"; }
+      if (cursorDotRef.current) { cursorDotRef.current.style.left = cx + "px"; cursorDotRef.current.style.top = cy + "px"; }
+      raf = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => { window.removeEventListener("mousemove", move); cancelAnimationFrame(raf); };
+  }, []);
+
+  // Particles canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = Array.from({ length: 60 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.2 + 0.3,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      o: Math.random() * 0.4 + 0.1,
+    }));
+    let raf;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200,169,110,${p.o})`;
+        ctx.fill();
+      });
+      // Draw connections
+      particles.forEach((a, i) => {
+        particles.slice(i + 1).forEach(b => {
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < 120) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(200,169,110,${0.06 * (1 - d / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        });
+      });
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    window.addEventListener("resize", resize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+  }, []);
+
+  // Text reveal
+  useEffect(() => {
+    setTimeout(() => setLoaded(true), 300);
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setDisplayedChars(i);
+      if (i >= heroText.length) clearInterval(interval);
+    }, 45);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Scroll
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Scroll reveal hook
+  const [revealed, setRevealed] = useState({});
+  const revealRefs = useRef({});
   useEffect(() => {
     const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) setVisible(p => ({ ...p, [e.target.dataset.id]: true }));
-      });
-    }, { threshold: 0.12 });
-    Object.values(refs.current).forEach(el => el && obs.observe(el));
+      entries.forEach(e => { if (e.isIntersecting) setRevealed(p => ({ ...p, [e.target.dataset.rid]: true })); });
+    }, { threshold: 0.1 });
+    Object.values(revealRefs.current).forEach(el => el && obs.observe(el));
     return () => obs.disconnect();
   }, []);
 
-  function ref(id) {
-    return el => { if (el) { el.dataset.id = id; refs.current[id] = el; } };
+  function rref(id) { return el => { if (el) { el.dataset.rid = id; revealRefs.current[id] = el; } }; }
+  function rev(id, delay = 0) {
+    return {
+      opacity: revealed[id] ? 1 : 0,
+      transform: revealed[id] ? "translateY(0)" : "translateY(30px)",
+      transition: `opacity 0.8s ${delay}s cubic-bezier(0.4,0,0.2,1), transform 0.8s ${delay}s cubic-bezier(0.4,0,0.2,1)`,
+    };
   }
 
-  function anim(id, delay = 0) {
-  return {
-    opacity: 1,
-    transform: "translateY(0)",
-  };
-}
-  
+  const C = { bg: "#080807", bg2: "#0f0f0d", bg3: "#161614", gold: "#c8a96e", goldLight: "#e8d4a8", white: "#f5f3ee", muted: "rgba(245,243,238,0.4)", border: "rgba(245,243,238,0.08)" };
+  const F = { serif: "'Cormorant Garamond', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
 
-  const marqueeItems = ["Potentiel", "Culture fit", "Mise en situation", "Reconversion", "Matching intelligent", "Évaluation hybride", "Premier emploi", "Score de fit"];
+  const marqueeItems = ["Potentiel", "Culture Fit", "Mise en situation", "Reconversion", "Matching intelligent", "Évaluation hybride", "Premier emploi", "Score de fit", "Sans diplôme", "Niaque"];
 
   return (
-    <div style={{ fontFamily: font.sans, background: G.paper, color: G.ink, overflowX: "hidden" }}>
+    <div style={{ background: C.bg, color: C.white, fontFamily: F.sans, overflowX: "hidden", cursor: "none" }}>
+
+      {/* GOOGLE FONTS */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { cursor: none !important; }
+        * { cursor: none !important; }
+        ::selection { background: rgba(200,169,110,0.3); color: #f5f3ee; }
+        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @keyframes shimmer { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
+        @keyframes lineGrow { from { width: 0; } to { width: 100%; } }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+      `}</style>
+
+      {/* CUSTOM CURSOR */}
+      <div ref={cursorRef} style={{ position: "fixed", width: 8, height: 8, background: C.gold, borderRadius: "50%", pointerEvents: "none", zIndex: 9999, transform: "translate(-50%,-50%)", transition: "transform 0.1s" }} />
+      <div ref={cursorDotRef} style={{ position: "fixed", width: 40, height: 40, border: `1px solid rgba(200,169,110,0.4)`, borderRadius: "50%", pointerEvents: "none", zIndex: 9998, transform: "translate(-50%,-50%)", transition: "width 0.3s, height 0.3s, opacity 0.3s" }} />
 
       {/* NAV */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.25rem 3rem", background: "rgba(247,245,240,0.9)", backdropFilter: "blur(16px)", borderBottom: `1px solid rgba(17,17,16,0.06)` }}>
-        <div style={{ fontFamily: font.serif, fontSize: 20, color: G.ink }}>Let<em style={{ fontStyle: "italic", color: G.muted }}>Me</em>Work</div>
-        <div style={{ display: "flex", gap: 12 }}>
-          <button onClick={() => onEnter("login")} style={{ ...s.btnGhost, padding: "8px 20px", fontSize: 13 }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = G.ink; e.currentTarget.style.color = G.ink; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = G.paper3; e.currentTarget.style.color = G.muted; }}>
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.5rem 4rem", background: `rgba(8,8,7,${Math.min(scrollY / 100, 0.95)})`, backdropFilter: "blur(20px)", borderBottom: scrollY > 50 ? `1px solid ${C.border}` : "1px solid transparent", transition: "all 0.4s" }}>
+        <div style={{ fontFamily: F.serif, fontSize: 22, fontWeight: 400, color: C.white, letterSpacing: "0.02em" }}>
+          Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
+        </div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <button onClick={() => onEnter("login")} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, padding: "9px 22px", borderRadius: 2, fontSize: 13, fontFamily: F.sans, cursor: "none", transition: "all 0.3s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.color = C.gold; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}>
             Se connecter
           </button>
-          <button onClick={() => onEnter("signup")} style={{ ...s.btnPrimary, padding: "8px 20px", fontSize: 13 }}
-            onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-            onMouseLeave={e => e.currentTarget.style.opacity = 1}>
+          <button onClick={() => onEnter("signup")} style={{ background: C.gold, border: "none", color: C.bg, padding: "9px 22px", borderRadius: 2, fontSize: 13, fontFamily: F.sans, fontWeight: 500, cursor: "none", transition: "all 0.3s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = C.goldLight; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.transform = "translateY(0)"; }}>
             Rejoindre →
           </button>
         </div>
       </nav>
 
       {/* HERO */}
-      <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "10rem 4rem 5rem", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(17,17,16,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,16,0.04) 1px, transparent 1px)", backgroundSize: "60px 60px", pointerEvents: "none" }} />
-        <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: G.muted, marginBottom: "2rem", display: "flex", alignItems: "center", gap: 12, opacity: 1 }}>
-          <div style={{ width: 32, height: 1, background: G.muted }} />Beta — Accès anticipé
+      <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "0 4rem 5rem", position: "relative", overflow: "hidden" }}>
+        <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(200,169,110,0.04) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: `linear-gradient(to top, ${C.bg}, transparent)`, pointerEvents: "none" }} />
+
+        {/* Eyebrow */}
+        <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: C.gold, marginBottom: "2rem", display: "flex", alignItems: "center", gap: 16, opacity: loaded ? 1 : 0, transition: "opacity 0.8s 0.5s", position: "relative" }}>
+          <div style={{ width: 40, height: 1, background: C.gold, animation: loaded ? "lineGrow 0.8s 0.5s ease both" : "none" }} />
+          Beta — Accès anticipé
         </div>
-        <h1 style={{ fontFamily: font.serif, fontSize: "clamp(56px, 9vw, 110px)", lineHeight: 0.92, letterSpacing: -2, maxWidth: 900, opacity: 1, color: G.ink}}>
-          Le potentiel<br />avant <em style={{ fontStyle: "italic", color: G.muted }}>le papier.</em>
+
+        {/* Main title — typewriter */}
+        <h1 style={{ fontFamily: F.serif, fontSize: "clamp(52px, 8vw, 108px)", fontWeight: 300, lineHeight: 1.0, letterSpacing: "-0.02em", maxWidth: 900, position: "relative", zIndex: 1, marginBottom: "3rem" }}>
+          {heroText.split("").map((char, i) => (
+            <span key={i} style={{ opacity: i < displayedChars ? 1 : 0, color: char === "." ? C.gold : i > 14 && i < 21 ? C.gold : C.white, transition: "opacity 0.1s", fontStyle: i >= 11 ? "italic" : "normal" }}>
+              {char}
+            </span>
+          ))}
+          <span style={{ display: "inline-block", width: 3, height: "0.8em", background: C.gold, marginLeft: 4, verticalAlign: "middle", animation: displayedChars >= heroText.length ? "shimmer 1s infinite" : "none", opacity: displayedChars >= heroText.length ? 1 : 0 }} />
         </h1>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid rgba(17,17,16,0.1)`, opacity: 1, flexWrap: "wrap", gap: "2rem" }}>
-          <p style={{ fontSize: 16, fontWeight: 300, color: G.muted, maxWidth: 400, lineHeight: 1.75 }}>LetMeWork connecte les talents motivés avec les entreprises qui cherchent le vrai match — pas juste le bon profil sur le papier.</p>
-          <div style={{ display: "flex", gap: 12 }}>
-            <button onClick={() => onEnter("signup")} style={{ ...s.btnPrimary, padding: "13px 28px" }}
-              onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-              onMouseLeave={e => e.currentTarget.style.opacity = 1}>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", paddingTop: "2rem", borderTop: `1px solid ${C.border}`, flexWrap: "wrap", gap: "2rem", opacity: loaded ? 1 : 0, transition: "opacity 0.8s 1.5s", position: "relative", zIndex: 1 }}>
+          <p style={{ fontSize: 15, fontWeight: 300, color: C.muted, maxWidth: 380, lineHeight: 1.8 }}>
+            LetMeWork connecte les talents motivés avec les entreprises qui cherchent le vrai match — pas juste le bon profil sur le papier.
+          </p>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <button onClick={() => onEnter("signup")} style={{ background: C.gold, border: "none", color: C.bg, padding: "14px 36px", borderRadius: 2, fontSize: 14, fontFamily: F.sans, fontWeight: 500, cursor: "none", transition: "all 0.3s", letterSpacing: "0.02em" }}
+              onMouseEnter={e => { e.currentTarget.style.background = C.goldLight; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(200,169,110,0.25)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
               Je veux tester →
             </button>
-            <button onClick={() => onEnter("login")} style={{ ...s.btnGhost, padding: "13px 28px" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = G.ink; e.currentTarget.style.color = G.ink; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = G.paper3; e.currentTarget.style.color = G.muted; }}>
+            <button onClick={() => onEnter("login")} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, padding: "14px 28px", borderRadius: 2, fontSize: 14, fontFamily: F.sans, cursor: "none", transition: "all 0.3s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = C.white; e.currentTarget.style.color = C.white; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}>
               Se connecter
             </button>
           </div>
         </div>
-        <div style={{ display: "flex", gap: "4rem", marginTop: "4rem", opacity: 1, flexWrap: "wrap" }}>
-          {[["73%", "des recrutements ratent à cause d'un mauvais fit"], ["2×", "plus de chances avec une mise en situation"], ["0", "expérience requise pour montrer ton potentiel"]].map(([n, l]) => (
-            <div key={n}>
-              <div style={{ fontFamily: font.serif, fontSize: 34, letterSpacing: -1, color: G.ink }}>{n}</div>
-              <div style={{ fontSize: 12, color: G.muted, marginTop: 4, maxWidth: 140, lineHeight: 1.5 }}>{l}</div>
+
+        {/* Stats */}
+        <div style={{ display: "flex", gap: "4rem", marginTop: "4rem", opacity: loaded ? 1 : 0, transition: "opacity 0.8s 1.8s", position: "relative", zIndex: 1, flexWrap: "wrap" }}>
+          {[["73%", "des recrutements ratent à cause d'un mauvais fit"], ["2×", "plus de chances avec une mise en situation concrète"], ["0", "expérience requise pour montrer ton potentiel"]].map(([n, l]) => (
+            <div key={n} style={{ borderLeft: `1px solid ${C.gold}`, paddingLeft: "1.25rem" }}>
+              <div style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 300, color: C.gold, lineHeight: 1 }}>{n}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 6, maxWidth: 160, lineHeight: 1.6 }}>{l}</div>
             </div>
           ))}
         </div>
-        <style>{`@keyframes fadeUp { from { opacity:1; transform:translateY(0); } to { opacity:1; transform:translateY(0); } }`}</style>
       </section>
 
       {/* MARQUEE */}
-      <div style={{ overflow: "hidden", borderTop: `1px solid rgba(17,17,16,0.08)`, borderBottom: `1px solid rgba(17,17,16,0.08)`, padding: "0.9rem 0", background: G.paper2 }}>
-        <div style={{ display: "flex", animation: "marquee 28s linear infinite", width: "max-content" }}>
+      <div style={{ overflow: "hidden", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "1rem 0", background: C.bg2 }}>
+        <div style={{ display: "flex", animation: "marquee 35s linear infinite", width: "max-content" }}>
           {[...marqueeItems, ...marqueeItems].map((item, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: "2rem", padding: "0 2.5rem", fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: G.muted, whiteSpace: "nowrap" }}>
-              {item}<div style={{ width: 3, height: 3, borderRadius: "50%", background: G.paper3 }} />
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: "2rem", padding: "0 2rem", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.muted, whiteSpace: "nowrap" }}>
+              {item}
+              <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.gold, opacity: 0.4 }} />
             </div>
           ))}
         </div>
-        <style>{`@keyframes marquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }`}</style>
       </div>
 
       {/* PROBLEM */}
-      <section style={{ padding: "8rem 4rem", display: "grid", gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "1fr 1fr", gap: window.innerWidth < 768 ? "3rem" : "6rem", alignItems: "start", maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ position: "sticky", top: "8rem" }}>
-          <div ref={ref("pb-eye")} style={{ ...s.eyebrow, ...anim("pb-eye") }}>
-            <div style={{ width: 24, height: 1, background: G.muted }} />Le vrai problème
-          </div>
-          <h2 ref={ref("pb-title")} style={{ fontFamily: font.serif, fontSize: "clamp(32px, 4vw, 48px)", lineHeight: 1.05, letterSpacing: -1, color: G.ink, ...anim("pb-title", 0.1) }}>
-            Les sites d'emploi filtrent.<br />Ils ne <em style={{ fontStyle: "italic", color: G.muted }}>révèlent</em> pas.
-          </h2>
-        </div>
-        <div>
-          {[
-            ["01", "Les algorithmes éliminent les bons profils", "Un mot-clé manquant et ton dossier part à la poubelle — avant même qu'un humain le lise."],
-            ["02", "Le cercle vicieux de l'expérience", "Pas d'expérience → pas de job → pas d'expérience. Impossible d'entrer dans la boucle sans la bonne case cochée."],
-            ["03", "Le bon profil, la mauvaise personne", "Embauché sur le CV, licencié pour le caractère. Tout le monde perd du temps sur des erreurs de casting évitables."],
-          ].map(([n, title, text], i) => (
-            <div key={n} ref={ref(`pb-${i}`)} style={{ padding: "2rem 0", borderBottom: `1px solid rgba(17,17,16,0.08)`, display: "grid", gridTemplateColumns: "2rem 1fr", gap: "1.5rem", ...anim(`pb-${i}`, i * 0.1) }}>
-              <div style={{ fontFamily: font.serif, fontSize: 14, color: G.muted, paddingTop: 2 }}>{n}</div>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 500, color: G.ink, marginBottom: 6 }}>{title}</div>
-                <div style={{ fontSize: 13, color: G.muted, lineHeight: 1.7, fontWeight: 300 }}>{text}</div>
-              </div>
+      <section style={{ padding: "10rem 4rem", background: C.bg }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "1fr 1fr", gap: "6rem", alignItems: "start" }}>
+          <div style={{ position: window.innerWidth < 768 ? "static" : "sticky", top: "8rem" }}>
+            <div ref={rref("pb-eye")} style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: 12, ...rev("pb-eye") }}>
+              <div style={{ width: 24, height: 1, background: C.gold }} />Le vrai problème
             </div>
-          ))}
+            <h2 ref={rref("pb-title")} style={{ fontFamily: F.serif, fontSize: "clamp(32px, 4vw, 52px)", fontWeight: 300, lineHeight: 1.05, letterSpacing: "-0.02em", color: C.white, ...rev("pb-title", 0.1) }}>
+              Les sites d'emploi filtrent.<br />Ils ne <em style={{ fontStyle: "italic", color: C.gold }}>révèlent</em> pas.
+            </h2>
+          </div>
+          <div>
+            {[
+              ["01", "Les algorithmes éliminent les bons profils", "Un mot-clé manquant et ton dossier part à la poubelle — avant même qu'un humain le lise."],
+              ["02", "Le cercle vicieux de l'expérience", "Pas d'expérience → pas de job → pas d'expérience. Impossible d'entrer dans la boucle sans la bonne case cochée."],
+              ["03", "Le bon profil, la mauvaise personne", "Embauché sur le CV, licencié pour le caractère. Tout le monde perd du temps sur des erreurs de casting évitables."],
+            ].map(([n, title, text], i) => (
+              <div key={n} ref={rref(`pb-${i}`)} style={{ padding: "2rem 0", borderBottom: `1px solid ${C.border}`, display: "grid", gridTemplateColumns: "2rem 1fr", gap: "1.5rem", ...rev(`pb-${i}`, i * 0.12), transition: "border-color 0.3s" }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(200,169,110,0.3)"}
+                onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
+                <div style={{ fontFamily: F.serif, fontSize: 13, color: C.gold, paddingTop: 2 }}>{n}</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 500, color: C.white, marginBottom: 8 }}>{title}</div>
+                  <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.75, fontWeight: 300 }}>{text}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* HISTOIRE */}
-      <section style={{ padding: "8rem 4rem", background: G.ink, color: G.paper }}>
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <div ref={ref("h-eye")} style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(247,245,240,0.3)", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: 10, ...anim("h-eye") }}>
-            <div style={{ width: 24, height: 1, background: "rgba(64, 63, 61, 0.2)" }} />Pourquoi LetMeWork
+      <section style={{ padding: "10rem 4rem", background: C.bg2, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(200,169,110,0.04) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ maxWidth: 720, margin: "0 auto", position: "relative" }}>
+          <div ref={rref("h-eye")} style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: 12, ...rev("h-eye") }}>
+            <div style={{ width: 24, height: 1, background: C.gold }} />Pourquoi LetMeWork
           </div>
-          <h2 ref={ref("h-title")} style={{ fontFamily: font.serif, fontSize: "clamp(32px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: -1, color: G.paper, marginBottom: "2.5rem", ...anim("h-title", 0.1) }}>
-            Une idée née d'une<br /><em style={{ fontStyle: "italic", color: "rgba(247,245,240,0.35)" }}>frustration personnelle.</em>
+          <h2 ref={rref("h-title")} style={{ fontFamily: F.serif, fontSize: "clamp(32px, 4vw, 56px)", fontWeight: 300, lineHeight: 1.05, letterSpacing: "-0.02em", color: C.white, marginBottom: "3rem", ...rev("h-title", 0.1) }}>
+            Une idée née d'une<br /><em style={{ fontStyle: "italic", color: C.gold }}>frustration personnelle.</em>
           </h2>
-          <div ref={ref("h-text")} style={{ ...anim("h-text", 0.2) }}>
+          <div ref={rref("h-text")} style={{ ...rev("h-text", 0.2) }}>
             {[
               "Je m'appelle Kévin. Et comme beaucoup, j'ai vécu cette situation : envoyer des candidatures, attendre, ne jamais avoir de retour. Pas parce que je n'avais rien à apporter — mais parce que mon profil ne cochait pas les bonnes cases.",
-              "J'ai réalisé que le problème n'était pas les candidats. C'était le système. Des algorithmes qui filtrent sur des mots-clés, des recruteurs qui cherchent 5 ans d'expérience pour un premier poste, des gens ultra-motivés qui passent entre les mailles du filet.",
-              "Alors j'ai eu cette idée simple : et si on jugeait les gens sur ce qu'ils sont capables de faire, pas sur ce qu'ils ont déjà fait ? Et si un recruteur pouvait voir ta niaque, tes valeurs, ta façon de penser — avant même de lire ton CV ?",
-              "C'est LetMeWork. Pas une révolution. Juste une chance donnée à ceux qui la méritent.",
+              "J'ai réalisé que le problème n'était pas les candidats. C'était le système. Des algorithmes qui filtrent sur des mots-clés, des recruteurs qui cherchent 5 ans d'expérience pour un premier poste, des gens ultra-motivés qui passent entre les mailles.",
+              "Alors j'ai eu cette idée simple : et si on jugeait les gens sur ce qu'ils sont capables de faire, pas sur ce qu'ils ont déjà fait ?",
             ].map((para, i) => (
-              <p key={i} style={{ fontSize: 16, color: i === 3 ? G.paper : "rgba(247,245,240,0.55)", lineHeight: 1.85, fontWeight: 300, marginBottom: "1.5rem", fontStyle: i === 3 ? "italic" : "normal", fontFamily: i === 3 ? font.serif : font.sans, fontSize: i === 3 ? 20 : 15 }}>{para}</p>
+              <p key={i} style={{ fontSize: 15, color: i === 2 ? C.white : C.muted, lineHeight: 1.9, fontWeight: 300, marginBottom: "1.5rem", fontStyle: i === 2 ? "italic" : "normal", fontFamily: i === 2 ? F.serif : F.sans, fontSize: i === 2 ? 20 : 15, borderLeft: i === 2 ? `2px solid ${C.gold}` : "none", paddingLeft: i === 2 ? "1.5rem" : 0 }}>{para}</p>
             ))}
           </div>
-          <div ref={ref("h-sig")} style={{ marginTop: "2rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(247,245,240,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center", ...anim("h-sig", 0.3) }}>
+          <div ref={rref("h-sig")} style={{ marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1.5rem", ...rev("h-sig", 0.3) }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: G.paper }}>Bellaïche Kévin</div>
-              <div style={{ fontSize: 12, color: "rgba(247,245,240,0.3)", marginTop: 2 }}>Fondateur, LetMeWork</div>
+              <div style={{ fontSize: 15, fontWeight: 500, color: C.white }}>Bellaïche Kévin</div>
+              <div style={{ fontSize: 12, color: C.gold, marginTop: 3, letterSpacing: "0.06em" }}>Fondateur, LetMeWork</div>
             </div>
-            <button onClick={() => onEnter("signup")} style={{ ...s.btnPrimary, background: G.paper, color: G.ink, padding: "10px 24px" }}
-              onMouseEnter={e => e.currentTarget.style.opacity = 0.8}
-              onMouseLeave={e => e.currentTarget.style.opacity = 1}>
+            <button onClick={() => onEnter("signup")} style={{ background: "transparent", border: `1px solid ${C.gold}`, color: C.gold, padding: "10px 24px", borderRadius: 2, fontSize: 13, fontFamily: F.sans, cursor: "none", transition: "all 0.3s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.color = C.bg; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.gold; }}>
               Rejoindre l'aventure →
             </button>
           </div>
@@ -1143,21 +1279,27 @@ function LandingPage({ onEnter }) {
       </section>
 
       {/* CTA FINAL */}
-      <section style={{ padding: "8rem 4rem", textAlign: "center", background: G.paper }}>
-        <div ref={ref("cta")} style={{ maxWidth: 560, margin: "0 auto", ...anim("cta") }}>
-          <h2 style={{ fontFamily: font.serif, fontSize: "clamp(36px, 5vw, 60px)", letterSpacing: -1.5, lineHeight: 1.05, marginBottom: "1rem", color: G.ink }}>
-            Prêt à montrer ce que tu <em style={{ fontStyle: "italic", color: G.muted }}>vaux vraiment ?</em>
+      <section style={{ padding: "10rem 4rem", background: C.bg, textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 60% 60% at 50% 100%, rgba(200,169,110,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div ref={rref("cta")} style={{ maxWidth: 600, margin: "0 auto", position: "relative", ...rev("cta") }}>
+          <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, marginBottom: "2rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+            <div style={{ width: 24, height: 1, background: C.gold }} />Rejoins-nous<div style={{ width: 24, height: 1, background: C.gold }} />
+          </div>
+          <h2 style={{ fontFamily: F.serif, fontSize: "clamp(40px, 6vw, 72px)", fontWeight: 300, letterSpacing: "-0.02em", lineHeight: 1.0, marginBottom: "1.5rem", color: C.white }}>
+            Prêt à montrer ce que tu <em style={{ fontStyle: "italic", color: C.gold }}>vaux vraiment ?</em>
           </h2>
-          <p style={{ fontSize: 15, color: G.muted, fontWeight: 300, lineHeight: 1.7, marginBottom: "2.5rem" }}>Rejoins LetMeWork et découvre un recrutement basé sur qui tu es, pas sur ce que tu as fait.</p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={() => onEnter("signup")} style={{ ...s.btnPrimary, padding: "13px 32px", fontSize: 14 }}
-              onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-              onMouseLeave={e => e.currentTarget.style.opacity = 1}>
+          <p style={{ fontSize: 15, color: C.muted, fontWeight: 300, lineHeight: 1.8, marginBottom: "3rem" }}>
+            Rejoins LetMeWork et découvre un recrutement basé sur qui tu es, pas sur ce que tu as fait.
+          </p>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={() => onEnter("signup")} style={{ background: C.gold, border: "none", color: C.bg, padding: "15px 40px", borderRadius: 2, fontSize: 14, fontFamily: F.sans, fontWeight: 500, cursor: "none", transition: "all 0.3s", letterSpacing: "0.02em" }}
+              onMouseEnter={e => { e.currentTarget.style.background = C.goldLight; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(200,169,110,0.3)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
               Je cherche un emploi →
             </button>
-            <button onClick={() => onEnter("signup")} style={{ ...s.btnGhost, padding: "13px 32px", fontSize: 14 }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = G.ink; e.currentTarget.style.color = G.ink; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = G.paper3; e.currentTarget.style.color = G.muted; }}>
+            <button onClick={() => onEnter("signup")} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, padding: "15px 40px", borderRadius: 2, fontSize: 14, fontFamily: F.sans, cursor: "none", transition: "all 0.3s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = C.white; e.currentTarget.style.color = C.white; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}>
               Je recrute
             </button>
           </div>
@@ -1165,10 +1307,13 @@ function LandingPage({ onEnter }) {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ padding: "1.5rem 4rem", background: G.ink, borderTop: `1px solid rgba(247,245,240,0.06)`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontFamily: font.serif, fontSize: 16, color: G.paper }}>Let<em style={{ fontStyle: "italic", color: "rgba(247,245,240,0.3)" }}>Me</em>Work</div>
-        <div style={{ fontSize: 11, color: "rgba(247,245,240,0.2)" }}>Conçu par Bellaïche Kévin</div>
+      <footer style={{ padding: "1.5rem 4rem", background: C.bg2, borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+        <div style={{ fontFamily: F.serif, fontSize: 18, fontWeight: 300, color: C.white }}>
+          Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(245,243,238,0.2)", letterSpacing: "0.06em" }}>Conçu par Bellaïche Kévin</div>
       </footer>
+
     </div>
   );
 }
