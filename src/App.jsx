@@ -524,7 +524,7 @@ function LandingPage({ onEnter }) {
                 ["Trouve ton match", "Postule ou laisse les recruteurs venir à toi."],
               ].map(([title, text], i) => (
                 <div key={i} ref={rr(`hw${i + 1}`)} style={{ background: C.bg2, padding: "2.5rem 1.5rem", ...rv(`hw${i + 1}`, i * 0.1) }}>
-                  <div style={{ fontFamily: F.serif, fontSize: 42, fontWeight: 300, color: C.gold, lineHeight: 1, marginBottom: "1rem", opacity: 0.5 }}>0{i + 1}</div>
+                  <div style={{ fontFamily: F.serif, fontSize: 42, fontWeight: 300, color: C.gold, lineHeight: 1, marginBottom: "1rem", opacity: 0.5 }}>{i + 1}</div>
                   <div style={{ fontSize: 14, fontWeight: 500, color: C.white, marginBottom: 8 }}>{title}</div>
                   <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, fontWeight: 300 }}>{text}</div>
                 </div>
