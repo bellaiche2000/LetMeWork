@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./supabase";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
@@ -71,36 +71,55 @@ const VALUES_QUESTIONS = [
   { id: "val4", question: "Ton rapport à l'erreur...", options: ["C'est une opportunité d'apprendre", "C'est inévitable, faut avancer", "Ça me tracasse un moment", "Je l'analyse pour ne plus la refaire"] },
 ];
 
-// ─── STYLES ──────────────────────────────────────────────────────────────────
+// ─── THEME ───────────────────────────────────────────────────────────────────
 
-const G = {
-  ink: "#111110", ink2: "#1c1c1a", ink3: "#282826",
-  paper: "#f7f5f0", paper2: "#efede8", paper3: "#e5e2da",
-  muted: "#8a8880", muted2: "#6a6864",
+const C = {
+  bg: "#07070a",
+  bg2: "#0d0d12",
+  bg3: "#13131a",
   gold: "#c8a96e",
-  success: "#2d6a4f", successBg: "#d8f3dc",
-  danger: "#a32d2d", dangerBg: "#fcebeb",
+  goldLight: "#e8d4a8",
+  goldDim: "rgba(200,169,110,0.15)",
+  white: "#f0eee8",
+  muted: "rgba(240,238,232,0.4)",
+  muted2: "rgba(240,238,232,0.2)",
+  border: "rgba(240,238,232,0.07)",
+  borderGold: "rgba(200,169,110,0.25)",
+  danger: "#ff6b6b",
+  dangerBg: "rgba(255,107,107,0.1)",
+  success: "#4ecdc4",
+  successBg: "rgba(78,205,196,0.1)",
 };
 
-const font = { serif: "'Georgia', serif", sans: "'DM Sans', system-ui, sans-serif" };
+const F = {
+  serif: "'Cormorant Garamond', Georgia, serif",
+  sans: "'DM Sans', system-ui, sans-serif",
+};
 
 const s = {
-  page: { minHeight: "100vh", background: G.paper, fontFamily: font.sans, color: G.ink },
-  card: { background: "#fff", border: `1px solid ${G.paper3}`, borderRadius: 4, padding: "1.5rem" },
-  cardDark: { background: G.ink, border: `1px solid ${G.ink2}`, borderRadius: 4, padding: "1.5rem", color: G.paper },
-  input: { width: "100%", padding: "10px 14px", border: `1px solid ${G.paper3}`, borderRadius: 2, fontFamily: font.sans, fontSize: 14, color: G.ink, background: "#fff", outline: "none", transition: "border-color 0.2s" },
-  textarea: { width: "100%", padding: "10px 14px", border: `1px solid ${G.paper3}`, borderRadius: 2, fontFamily: font.sans, fontSize: 14, color: G.ink, background: "#fff", outline: "none", resize: "vertical", minHeight: 100, transition: "border-color 0.2s" },
-  btnPrimary: { background: G.ink, color: G.paper, border: "none", borderRadius: 2, padding: "10px 22px", fontFamily: font.sans, fontSize: 13, fontWeight: 400, cursor: "pointer", letterSpacing: "0.02em", transition: "opacity 0.2s" },
-  btnGhost: { background: "transparent", color: G.muted, border: `1px solid ${G.paper3}`, borderRadius: 2, padding: "10px 22px", fontFamily: font.sans, fontSize: 13, cursor: "pointer", transition: "all 0.2s" },
-  btnSmall: { background: G.ink, color: G.paper, border: "none", borderRadius: 2, padding: "7px 16px", fontFamily: font.sans, fontSize: 12, cursor: "pointer", letterSpacing: "0.02em" },
-  label: { fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: G.muted, marginBottom: 6, display: "block" },
-  eyebrow: { fontSize: 11, fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", color: G.muted, display: "flex", alignItems: "center", gap: 10, marginBottom: 12 },
-  serif: { fontFamily: font.serif },
-  tag: { display: "inline-flex", alignItems: "center", fontSize: 11, padding: "3px 10px", borderRadius: 20, border: `1px solid ${G.paper3}`, color: G.muted, background: G.paper2 },
-  badge: (c) => ({ display: "inline-flex", alignItems: "center", fontSize: 11, padding: "3px 10px", borderRadius: 20, background: c === "green" ? G.successBg : c === "gold" ? "#fdf3e2" : G.paper2, color: c === "green" ? G.success : c === "gold" ? "#7a5c1e" : G.muted }),
+  input: {
+    width: "100%", padding: "12px 16px",
+    border: `1px solid ${C.border}`,
+    borderRadius: 4, fontFamily: F.sans, fontSize: 14,
+    color: C.white, background: "rgba(255,255,255,0.04)",
+    outline: "none", transition: "border-color 0.2s",
+  },
+  textarea: {
+    width: "100%", padding: "12px 16px",
+    border: `1px solid ${C.border}`,
+    borderRadius: 4, fontFamily: F.sans, fontSize: 14,
+    color: C.white, background: "rgba(255,255,255,0.04)",
+    outline: "none", resize: "vertical", minHeight: 100,
+    transition: "border-color 0.2s",
+  },
+  label: { fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: C.muted, marginBottom: 6, display: "block" },
+  card: { background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`, borderRadius: 8, padding: "1.25rem 1.5rem" },
+  btnPrimary: { background: C.gold, color: C.bg, border: "none", borderRadius: 4, padding: "11px 24px", fontFamily: F.sans, fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "all 0.2s", letterSpacing: "0.02em" },
+  btnGhost: { background: "transparent", color: C.muted, border: `1px solid ${C.border}`, borderRadius: 4, padding: "11px 24px", fontFamily: F.sans, fontSize: 13, cursor: "pointer", transition: "all 0.2s" },
+  btnSmall: { background: C.goldDim, color: C.gold, border: `1px solid ${C.borderGold}`, borderRadius: 4, padding: "6px 14px", fontFamily: F.sans, fontSize: 12, cursor: "pointer" },
+  tag: { display: "inline-flex", alignItems: "center", fontSize: 11, padding: "3px 10px", borderRadius: 20, border: `1px solid ${C.border}`, color: C.muted, background: "rgba(255,255,255,0.03)" },
+  eyebrow: { fontSize: 11, fontWeight: 400, letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, display: "flex", alignItems: "center", gap: 10, marginBottom: 12 },
 };
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 function calcScore(answers) {
   if (!answers || Object.keys(answers).length === 0) return 0;
@@ -109,254 +128,655 @@ function calcScore(answers) {
   return Math.round(55 + (filled / Math.max(n, 1)) * 35 + Math.random() * 10);
 }
 
-function ScoreBar({ value, max = 100, color = G.ink }) {
-  const [w, setW] = useState(0);
-  useEffect(() => { setTimeout(() => setW(value), 200); }, [value]);
-  return (
-    <div style={{ height: 3, background: G.paper3, borderRadius: 2, overflow: "hidden" }}>
-      <div style={{ height: "100%", width: `${(w / max) * 100}%`, background: color, borderRadius: 2, transition: "width 1s cubic-bezier(0.4,0,0.2,1)" }} />
-    </div>
-  );
-}
+// ─── CONSTELLATION BACKGROUND ────────────────────────────────────────────────
 
-function Divider() { return <div style={{ height: 1, background: G.paper3, margin: "1.5rem 0" }} />; }
-function DividerDark() { return <div style={{ height: 1, background: "rgba(247,245,240,0.08)", margin: "1.5rem 0" }} />; }
+function ConstellationBg() {
+  const canvasRef = useRef(null);
+  const mouseRef = useRef({ x: -1000, y: -1000 });
 
-// ─── ONBOARDING ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let W = window.innerWidth, H = window.innerHeight;
+    canvas.width = W; canvas.height = H;
 
-function LoginScreen({ onComplete, onSwitch, onBack }) {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [err, setErr] = useState("");
+    const N = Math.floor((W * H) / 14000);
+    const particles = Array.from({ length: N }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
+      r: Math.random() * 1.4 + 0.4,
+      o: Math.random() * 0.5 + 0.15,
+      pulse: Math.random() * Math.PI * 2,
+    }));
 
-  async function submit() {
-  if (!form.email || !form.password) { setErr("Remplis tous les champs."); return; }
-  setErr("");
+    const onMove = (e) => {
+      const touch = e.touches?.[0];
+      mouseRef.current = { x: touch ? touch.clientX : e.clientX, y: touch ? touch.clientY : e.clientY };
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("touchmove", onMove);
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: form.email,
-    password: form.password,
-  });
+    const resize = () => {
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W; canvas.height = H;
+    };
+    window.addEventListener("resize", resize);
 
-  if (error) { setErr("Email ou mot de passe incorrect."); return; }
-  
-  const meta = data.user.user_metadata;
-  onComplete({
-    email: form.email,
-    name: meta.name || form.email.split("@")[0],
-    mode: meta.mode || "candidat",
-    sector: meta.sector || "",
-    company: meta.company || "",
-    id: data.user.id,
-  });
-}
+    let frame = 0;
+    let raf;
+    const draw = () => {
+      frame++;
+      ctx.clearRect(0, 0, W, H);
+      const mx = mouseRef.current.x, my = mouseRef.current.y;
 
-  return (
-    <div style={{ ...s.page, display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: "2rem" }}>
-      <div style={{ maxWidth: 400, width: "100%" }}>
-        <div style={{ fontFamily: font.serif, fontSize: 20, color: G.ink, marginBottom: "2.5rem" }}>
-          Let<em style={{ fontStyle: "italic", color: G.muted }}>Me</em>Work
-        </div>
-        <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Connexion</div>
-        <h2 style={{ fontFamily: font.serif, fontSize: 28, letterSpacing: -0.5, marginBottom: "2rem", color: G.ink }}>
-          Content de te revoir.
-        </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <label style={s.label}>Email</label>
-            <input style={s.input} type="email" placeholder="ton@email.com" value={form.email}
-              onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-              onFocus={e => e.target.style.borderColor = G.ink}
-              onBlur={e => e.target.style.borderColor = G.paper3} />
-          </div>
-          <div>
-            <label style={s.label}>Mot de passe</label>
-            <input style={s.input} type="password" placeholder="••••••••" value={form.password}
-              onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-              onFocus={e => e.target.style.borderColor = G.ink}
-              onBlur={e => e.target.style.borderColor = G.paper3} />
-          </div>
-          {err && <div style={{ fontSize: 13, color: G.danger, padding: "8px 12px", background: G.dangerBg, borderRadius: 2 }}>{err}</div>}
-          <button style={{ ...s.btnPrimary, padding: 12, marginTop: 4 }} onClick={submit}
-            onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-            onMouseLeave={e => e.currentTarget.style.opacity = 1}>
-            Se connecter →
-          </button>
-          <div style={{ textAlign: "center", fontSize: 13, color: G.muted, marginTop: 8 }}>
-            Pas encore de compte ?{" "}
-            <button onClick={onSwitch} style={{ background: "none", border: "none", color: G.ink, cursor: "pointer", fontSize: 13, fontFamily: font.sans, textDecoration: "underline" }}>
-              Rejoindre LetMeWork
-            </button>
-          </div>
-        </div>
-        <div style={{ marginTop: "3rem", textAlign: "right" }}>
-          <button onClick={onBack} style={{ background: "none", border: "none", color: G.muted, cursor: "pointer", fontSize: 11, fontFamily: font.sans }}>← Retour à l'accueil</button>
-        </div>
-        <p style={{ position: "fixed", bottom: "1rem", right: "1rem", fontSize: 11, color: G.muted, fontFamily: "DM Sans, sans-serif", margin: 0 }}>Conçu par Bellaïche Kévin</p>
-      </div>
-    </div>
-  );
-}
-function OnboardingScreen({ onComplete, onBack }) {
-  const [mode, setMode] = useState(null); // 'candidat' | 'recruteur'
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ name: "", email: "", password: "", sector: "", motivation: "", company: "" });
-  const [err, setErr] = useState("");
+      particles.forEach(p => {
+        // Mouse repulsion
+        const dx = p.x - mx, dy = p.y - my;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          p.vx += dx / dist * 0.08;
+          p.vy += dy / dist * 0.08;
+        }
+        // Damping
+        p.vx *= 0.99; p.vy *= 0.99;
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
 
- async function submit() {
-  if (!form.name || !form.email || !form.password) { setErr("Remplis tous les champs obligatoires."); return; }
-  if (mode === "candidat" && !form.sector) { setErr("Choisis un secteur."); return; }
-  if (mode === "recruteur" && !form.company) { setErr("Indique le nom de ton entreprise."); return; }
-  setErr("");
-  
-  const { data, error } = await supabase.auth.signUp({
-    email: form.email,
-    password: form.password,
-    options: {
-      data: {
-        name: form.name,
-        mode: mode,
-        sector: form.sector || "",
-        company: form.company || "",
-        motivation: form.motivation || "",
+        // Pulse
+        p.pulse += 0.01;
+        const pulse = Math.sin(p.pulse) * 0.15;
+
+        // Draw star
+        const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
+        grd.addColorStop(0, `rgba(200,169,110,${(p.o + pulse) * 0.9})`);
+        grd.addColorStop(1, `rgba(200,169,110,0)`);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+        ctx.fillStyle = grd;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(240,238,232,${p.o + pulse})`;
+        ctx.fill();
+      });
+
+      // Connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const a = particles[i], b = particles[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 140) {
+            const alpha = (1 - d / 140) * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(200,169,110,${alpha})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
       }
-    }
-  });
 
-  if (error) { setErr(error.message); return; }
-  onComplete({ ...form, mode, id: data.user.id });
-}
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
 
-  if (!mode) return (
-    <div style={{ ...s.page, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: "2rem" }}>
-      <div style={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
-        <div style={{ fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: G.muted, marginBottom: "2rem" }}>Beta — Accès anticipé</div>
-        <h1 style={{ fontFamily: font.serif, fontSize: 42, letterSpacing: -1, lineHeight: 1.05, marginBottom: "1rem", color: G.ink }}>
-          Bienvenue sur<br /><em style={{ color: G.muted }}>LetMeWork</em>
-        </h1>
-        <p style={{ fontSize: 15, color: G.muted, fontWeight: 300, lineHeight: 1.7, marginBottom: "2.5rem" }}>Le potentiel avant le papier. Rejoins la plateforme et découvre un recrutement basé sur qui tu es vraiment.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {[
-            { k: "candidat", title: "Je cherche un emploi", sub: "Crée ton profil, passe les défis, trouve ton match" },
-            { k: "recruteur", title: "Je recrute", sub: "Publie une offre, crée tes défis, trouve les bons profils" },
-          ].map(o => (
-            <button key={o.k} onClick={() => setMode(o.k)} style={{ background: "#fff", border: `1px solid ${G.paper3}`, borderRadius: 4, padding: "1.5rem", cursor: "pointer", textAlign: "left", transition: "border-color 0.2s, transform 0.15s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = G.ink; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = G.paper3; e.currentTarget.style.transform = "translateY(0)"; }}>
-              <div style={{ fontSize: 15, fontWeight: 500, color: G.ink, marginBottom: 6 }}>{o.title}</div>
-              <div style={{ fontSize: 13, color: G.muted, fontWeight: 300, lineHeight: 1.6 }}>{o.sub}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
 
   return (
-    <div style={{ ...s.page, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-      <div style={{ maxWidth: 440, width: "100%" }}>
-        <button onClick={onBack} style={{ ...s.btnGhost, marginBottom: "1rem", fontSize: 12 }}>← Retour à l'accueil</button>
-        <div style={s.eyebrow}><div style={{ width: 24, height: 1, background: G.muted }} />{mode === "candidat" ? "Création de compte candidat" : "Création de compte recruteur"}</div>
-        <h2 style={{ fontFamily: font.serif, fontSize: 28, letterSpacing: -0.5, marginBottom: "2rem", color: G.ink }}>
-          {mode === "candidat" ? "Dis-nous qui tu es." : "Parle-nous de ton entreprise."}
-        </h2>
+    <canvas ref={canvasRef} style={{
+      position: "fixed", inset: 0, zIndex: 0,
+      pointerEvents: "none", opacity: 0.7,
+    }} />
+  );
+}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {[
-            { k: "name", label: "Prénom & nom *", placeholder: "Alex Martin" },
-            { k: "email", label: "Email *", placeholder: "alex@email.com", type: "email" },
-            { k: "password", label: "Mot de passe *", placeholder: "••••••••", type: "password" },
-          ].map(f => (
-            <div key={f.k}>
-              <label style={s.label}>{f.label}</label>
-              <input style={s.input} type={f.type || "text"} placeholder={f.placeholder} value={form[f.k]}
-                onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
-                onFocus={e => e.target.style.borderColor = G.ink}
-                onBlur={e => e.target.style.borderColor = G.paper3} />
-            </div>
-          ))}
+// ─── SHARED LAYOUT ────────────────────────────────────────────────────────────
 
-          {mode === "candidat" && (
-            <>
-              <div>
-                <label style={s.label}>Secteur visé *</label>
-                <select style={{ ...s.input, appearance: "none" }} value={form.sector} onChange={e => setForm(p => ({ ...p, sector: e.target.value }))}>
-                  <option value="">Choisir un secteur</option>
-                  {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={s.label}>Ce qui te motive (optionnel)</label>
-                <textarea style={s.textarea} placeholder="Ce qui me drive c'est..." value={form.motivation}
-                  onChange={e => setForm(p => ({ ...p, motivation: e.target.value }))}
-                  onFocus={e => e.target.style.borderColor = G.ink}
-                  onBlur={e => e.target.style.borderColor = G.paper3} />
-              </div>
-            </>
-          )}
-
-          {mode === "recruteur" && (
-            <div>
-              <label style={s.label}>Entreprise *</label>
-              <input style={s.input} placeholder="Nom de ton entreprise" value={form.company}
-                onChange={e => setForm(p => ({ ...p, company: e.target.value }))}
-                onFocus={e => e.target.style.borderColor = G.ink}
-                onBlur={e => e.target.style.borderColor = G.paper3} />
-            </div>
-          )}
-
-          {err && <div style={{ fontSize: 13, color: G.danger, padding: "8px 12px", background: G.dangerBg, borderRadius: 2 }}>{err}</div>}
-
-          <button style={{ ...s.btnPrimary, padding: "12px", marginTop: 4 }} onClick={submit}
-            onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-            onMouseLeave={e => e.currentTarget.style.opacity = 1}>
-            Créer mon compte →
-          </button>
-        </div>
+function PageShell({ children, user, onLogout, onHome }) {
+  return (
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.white, fontFamily: F.sans, position: "relative" }}>
+      <ConstellationBg />
+      <div style={{ position: "relative", zIndex: 1 }}>
+        {children}
       </div>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+        * { box-sizing: border-box; }
+        ::selection { background: rgba(200,169,110,0.3); color: #f0eee8; }
+        input, textarea, select { color-scheme: dark; }
+        input::placeholder, textarea::placeholder { color: rgba(240,238,232,0.25); }
+        select option { background: #13131a; color: #f0eee8; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: ${C.bg}; }
+        ::-webkit-scrollbar-thumb { background: ${C.borderGold}; border-radius: 2px; }
+      `}</style>
     </div>
   );
 }
 
-// ─── SIDEBAR ─────────────────────────────────────────────────────────────────
+// ─── APP LAYOUT WITH SIDEBAR ──────────────────────────────────────────────────
 
-function Sidebar({ user, page, setPage, onLogout, onHome }) {
+function AppLayout({ user, page, setPage, onLogout, onHome, children }) {
   const links = user.mode === "candidat"
     ? [["dashboard", "Tableau de bord"], ["defis", "Mes défis"], ["offres", "Offres"], ["profil", "Mon profil"]]
     : [["dashboard", "Tableau de bord"], ["offres", "Mes offres"], ["candidats", "Candidats"], ["nouvelle-offre", "Créer une offre"]];
 
   return (
-    <div style={{ width: 220, minHeight: "100vh", background: G.ink, display: "flex", flexDirection: "column", padding: "1.5rem 0", flexShrink: 0 }}>
-      <div style={{ padding: "0 1.5rem 1.5rem", borderBottom: "1px solid rgba(247,245,240,0.06)" }}>
-        <div style={{ fontFamily: font.serif, fontSize: 18, color: G.paper }}><em style={{ fontStyle: "italic", color: "rgba(247,245,240,0.35)" }}>Let</em>MeWork</div>
-        <div style={{ fontSize: 11, color: "rgba(247,245,240,0.3)", marginTop: 4, letterSpacing: "0.08em", textTransform: "uppercase" }}>{user.mode}</div>
+    <PageShell user={user} onLogout={onLogout} onHome={onHome}>
+      <div style={{ display: "flex", minHeight: "100vh" }}>
+        {/* Sidebar */}
+        <div style={{ width: 220, minHeight: "100vh", background: "rgba(7,7,10,0.95)", backdropFilter: "blur(20px)", borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", padding: "1.5rem 0", flexShrink: 0, position: "sticky", top: 0, height: "100vh" }}>
+          <div style={{ padding: "0 1.5rem 1.5rem", borderBottom: `1px solid ${C.border}` }}>
+            <div style={{ fontFamily: F.serif, fontSize: 20, color: C.white }}>
+              Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
+            </div>
+            <div style={{ fontSize: 11, color: C.gold, marginTop: 4, letterSpacing: "0.08em", textTransform: "uppercase" }}>{user.mode}</div>
+          </div>
+          <nav style={{ flex: 1, padding: "1rem 0" }}>
+            {links.map(([k, label]) => (
+              <button key={k} onClick={() => setPage(k)} style={{
+                display: "block", width: "100%", textAlign: "left",
+                padding: "10px 1.5rem",
+                background: page === k ? "rgba(200,169,110,0.08)" : "transparent",
+                border: "none",
+                color: page === k ? C.gold : C.muted,
+                fontSize: 13, cursor: "pointer", fontFamily: F.sans,
+                borderLeft: page === k ? `2px solid ${C.gold}` : `2px solid transparent`,
+                transition: "all 0.2s",
+              }}
+                onMouseEnter={e => { if (page !== k) { e.currentTarget.style.color = C.white; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; } }}
+                onMouseLeave={e => { if (page !== k) { e.currentTarget.style.color = C.muted; e.currentTarget.style.background = "transparent"; } }}>
+                {label}
+              </button>
+            ))}
+          </nav>
+          <div style={{ padding: "1rem 1.5rem", borderTop: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 13, color: C.white, marginBottom: 2 }}>{user.name}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>{user.email}</div>
+            <button onClick={onHome} style={{ fontSize: 12, color: C.muted, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: F.sans, display: "block", marginBottom: 8, transition: "color 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.color = C.white}
+              onMouseLeave={e => e.currentTarget.style.color = C.muted}>
+              ← Page d'accueil
+            </button>
+            <button onClick={onLogout} style={{ fontSize: 12, color: C.muted, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: F.sans, transition: "color 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.color = C.danger}
+              onMouseLeave={e => e.currentTarget.style.color = C.muted}>
+              Déconnexion
+            </button>
+          </div>
+        </div>
+        {/* Main */}
+        <main style={{ flex: 1, overflow: "auto", background: "rgba(7,7,10,0.6)", backdropFilter: "blur(8px)" }}>
+          {children}
+        </main>
       </div>
-      <nav style={{ flex: 1, padding: "1rem 0" }}>
-        {links.map(([k, label]) => (
-          <button key={k} onClick={() => setPage(k)} style={{
-            display: "block", width: "100%", textAlign: "left", padding: "10px 1.5rem",
-            background: page === k ? "rgba(247,245,240,0.08)" : "transparent",
-            border: "none", color: page === k ? G.paper : "rgba(247,245,240,0.4)",
-            fontSize: 13, cursor: "pointer", fontFamily: font.sans,
-            borderLeft: page === k ? `2px solid ${G.paper}` : "2px solid transparent",
-            transition: "all 0.2s",
-          }}
-            onMouseEnter={e => { if (page !== k) e.currentTarget.style.color = "rgba(247,245,240,0.7)"; }}
-            onMouseLeave={e => { if (page !== k) e.currentTarget.style.color = "rgba(247,245,240,0.4)"; }}>
-            {label}
-          </button>
-        ))}
-      </nav>
-      <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid rgba(247,245,240,0.06)" }}>
-        <div style={{ fontSize: 13, color: G.paper, marginBottom: 4 }}>{user.name}</div>
-        <div style={{ fontSize: 11, color: "rgba(247,245,240,0.3)", marginBottom: 12 }}>{user.email}</div>
-        <button onClick={onLogout} style={{ fontSize: 12, color: "rgba(247,245,240,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: font.sans }}>
-          Déconnexion
-          <button onClick={onHome} style={{ fontSize: 12, color: "rgba(247,245,240,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: font.sans, marginTop: 8, display: "block" }}>
-  ← Page d'accueil
-</button>
-        </button>
-      </div>
+    </PageShell>
+  );
+}
+
+// ─── COMPONENTS ───────────────────────────────────────────────────────────────
+
+function ScoreBar({ value, color = C.gold }) {
+  const [w, setW] = useState(0);
+  useEffect(() => { setTimeout(() => setW(value), 300); }, [value]);
+  return (
+    <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+      <div style={{ height: "100%", width: `${w}%`, background: color, borderRadius: 2, transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)" }} />
     </div>
+  );
+}
+
+function Divider() { return <div style={{ height: 1, background: C.border, margin: "1.5rem 0" }} />; }
+
+function GoldBadge({ children }) {
+  return <span style={{ display: "inline-flex", alignItems: "center", fontSize: 11, padding: "3px 10px", borderRadius: 20, background: C.goldDim, color: C.gold, border: `1px solid ${C.borderGold}` }}>{children}</span>;
+}
+
+function SuccessBadge({ children }) {
+  return <span style={{ display: "inline-flex", alignItems: "center", fontSize: 11, padding: "3px 10px", borderRadius: 20, background: C.successBg, color: C.success }}>{children}</span>;
+}
+
+// ─── LANDING PAGE ─────────────────────────────────────────────────────────────
+
+function LandingPage({ onEnter }) {
+  const [scrollY, setScrollY] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  const [heroText] = useState("Et si tout changeait ?");
+  const [displayedChars, setDisplayedChars] = useState(0);
+  const [revealed, setRevealed] = useState({});
+  const revRefs = useRef({});
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) setRevealed(p => ({ ...p, [e.target.dataset.rid]: true })); });
+    }, { threshold: 0.1 });
+    Object.values(revRefs.current).forEach(el => el && obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  function rr(id) { return el => { if (el) { el.dataset.rid = id; revRefs.current[id] = el; } }; }
+  function rv(id, delay = 0) {
+    return {
+      opacity: revealed[id] ? 1 : 0,
+      transform: revealed[id] ? "translateY(0)" : "translateY(28px)",
+      transition: `opacity 0.9s ${delay}s cubic-bezier(0.4,0,0.2,1), transform 0.9s ${delay}s cubic-bezier(0.4,0,0.2,1)`,
+    };
+  }
+
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => setLoaded(true), 400);
+    let i = 0;
+    const t = setInterval(() => { i++; setDisplayedChars(i); if (i >= heroText.length) clearInterval(t); }, 60);
+    return () => clearInterval(t);
+  }, []);
+
+  const marqueeItems = ["Potentiel", "Culture Fit", "Mise en situation", "Reconversion", "Matching", "Évaluation hybride", "Premier emploi", "Score de fit", "Sans diplôme", "Niaque", "Ambition"];
+
+  return (
+    <PageShell>
+      <div style={{ fontFamily: F.sans, color: C.white }}>
+        <style>{`
+          @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+          @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+          @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        `}</style>
+
+        {/* NAV */}
+        <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.25rem 4rem", background: scrollY > 50 ? "rgba(7,7,10,0.92)" : "transparent", backdropFilter: scrollY > 50 ? "blur(20px)" : "none", borderBottom: scrollY > 50 ? `1px solid ${C.border}` : "1px solid transparent", transition: "all 0.4s" }}>
+          <div style={{ fontFamily: F.serif, fontSize: 22, color: C.white }}>
+            Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
+            <button onClick={() => onEnter("login")} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, padding: "8px 20px", borderRadius: 4, fontSize: 13, fontFamily: F.sans, cursor: "pointer", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.color = C.gold; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}>
+              Se connecter
+            </button>
+            <button onClick={() => onEnter("signup")} style={{ background: C.gold, border: "none", color: C.bg, padding: "8px 20px", borderRadius: 4, fontSize: 13, fontFamily: F.sans, fontWeight: 500, cursor: "pointer", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = C.goldLight; e.currentTarget.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.transform = "none"; }}>
+              Rejoindre →
+            </button>
+          </div>
+        </nav>
+
+        {/* HERO */}
+        <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "8rem 4rem 4rem", textAlign: "center", position: "relative" }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 50% at 50% 50%, rgba(200,169,110,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+          <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: C.gold, marginBottom: "2rem", display: "flex", alignItems: "center", gap: 12, opacity: loaded ? 1 : 0, transition: "opacity 1s 0.3s" }}>
+            <div style={{ width: 32, height: 1, background: C.gold }} />
+            Beta — Accès anticipé
+            <div style={{ width: 32, height: 1, background: C.gold }} />
+          </div>
+
+          <h1 style={{ fontFamily: F.serif, fontSize: "clamp(48px, 9vw, 120px)", fontWeight: 300, lineHeight: 0.95, letterSpacing: "-0.02em", maxWidth: 900, marginBottom: "2rem", position: "relative" }}>
+            {heroText.split("").map((char, i) => (
+              <span key={i} style={{ opacity: i < displayedChars ? 1 : 0, color: i > 13 ? C.gold : C.white, transition: "opacity 0.1s", fontStyle: i > 5 ? "italic" : "normal" }}>
+                {char}
+              </span>
+            ))}
+            <span style={{ display: "inline-block", width: 3, height: "0.75em", background: C.gold, marginLeft: 4, verticalAlign: "middle", animation: displayedChars >= heroText.length ? "blink 1s infinite" : "none", opacity: displayedChars >= heroText.length ? 1 : 0 }} />
+          </h1>
+
+          <p style={{ fontFamily: F.serif, fontSize: "clamp(18px, 2.5vw, 26px)", fontWeight: 300, fontStyle: "italic", color: C.muted, maxWidth: 600, lineHeight: 1.7, marginBottom: "3rem", opacity: loaded ? 1 : 0, transition: "opacity 1s 1.5s" }}>
+            Le recrutement basé sur le potentiel, pas le papier.<br />
+            <span style={{ color: C.white }}>Ton CV ne te définit pas.</span>
+          </p>
+
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center", opacity: loaded ? 1 : 0, transition: "opacity 1s 2s" }}>
+            <button onClick={() => onEnter("signup")} style={{ background: C.gold, border: "none", color: C.bg, padding: "15px 40px", borderRadius: 4, fontSize: 15, fontFamily: F.sans, fontWeight: 500, cursor: "pointer", transition: "all 0.3s", letterSpacing: "0.02em" }}
+              onMouseEnter={e => { e.currentTarget.style.background = C.goldLight; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 48px rgba(200,169,110,0.3)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
+              Rejoindre LetMeWork →
+            </button>
+            <button onClick={() => window.scrollTo({ top: window.innerHeight, behavior: "smooth" })} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, padding: "15px 32px", borderRadius: 4, fontSize: 15, fontFamily: F.sans, cursor: "pointer", transition: "all 0.3s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.color = C.gold; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}>
+              Découvrir ↓
+            </button>
+          </div>
+
+          <div style={{ position: "absolute", bottom: "3rem", left: "50%", transform: "translateX(-50%)", animation: "float 2s ease-in-out infinite", opacity: 0.4 }}>
+            <div style={{ width: 1, height: 40, background: `linear-gradient(to bottom, ${C.gold}, transparent)`, margin: "0 auto" }} />
+          </div>
+        </section>
+
+        {/* MARQUEE */}
+        <div style={{ overflow: "hidden", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "1rem 0", background: "rgba(7,7,10,0.8)", backdropFilter: "blur(10px)" }}>
+          <div style={{ display: "flex", animation: "marquee 40s linear infinite", width: "max-content" }}>
+            {[...marqueeItems, ...marqueeItems].map((item, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: "2rem", padding: "0 2rem", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.muted, whiteSpace: "nowrap" }}>
+                {item}
+                <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.gold, opacity: 0.5 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* PROBLEM */}
+        <section style={{ padding: "10rem 4rem", background: "rgba(7,7,10,0.7)", backdropFilter: "blur(10px)" }}>
+          <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+            <div ref={rr("pb0")} style={{ textAlign: "center", marginBottom: "5rem", ...rv("pb0") }}>
+              <div style={{ ...s.eyebrow, justifyContent: "center", marginBottom: "1rem" }}>
+                <div style={{ width: 20, height: 1, background: C.gold }} />Le problème
+              </div>
+              <h2 style={{ fontFamily: F.serif, fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 300, letterSpacing: "-0.02em", color: C.white, lineHeight: 1.1 }}>
+                Les sites d'emploi filtrent.<br />
+                <em style={{ fontStyle: "italic", color: C.gold }}>Ils ne révèlent pas.</em>
+              </h2>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+              {[
+                ["01", "Les algorithmes éliminent les bons profils", "Un mot-clé manquant et ton dossier part à la poubelle — avant même qu'un humain le lise."],
+                ["02", "Le cercle vicieux de l'expérience", "Pas d'expérience → pas de job → pas d'expérience. Impossible d'entrer dans la boucle sans la bonne case cochée."],
+                ["03", "Le bon profil, la mauvaise personne", "Embauché sur le CV, licencié pour le caractère. Tout le monde perd du temps sur des erreurs évitables."],
+              ].map(([n, title, text], i) => (
+                <div key={n} ref={rr(`pb${i + 1}`)} style={{ ...s.card, ...rv(`pb${i + 1}`, i * 0.15), transition: `all 0.9s ${i * 0.15}s cubic-bezier(0.4,0,0.2,1), border-color 0.3s` }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = C.borderGold}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
+                  <div style={{ fontFamily: F.serif, fontSize: 40, fontWeight: 300, color: C.borderGold, lineHeight: 1, marginBottom: "1rem" }}>{n}</div>
+                  <div style={{ fontSize: 15, fontWeight: 500, color: C.white, marginBottom: 8 }}>{title}</div>
+                  <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.75, fontWeight: 300 }}>{text}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* HOW */}
+        <section style={{ padding: "10rem 4rem", background: "rgba(13,13,18,0.8)", backdropFilter: "blur(10px)" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+            <div ref={rr("hw0")} style={{ ...rv("hw0") }}>
+              <div style={{ ...s.eyebrow, justifyContent: "center", marginBottom: "1rem" }}>
+                <div style={{ width: 20, height: 1, background: C.gold }} />La solution
+              </div>
+              <h2 style={{ fontFamily: F.serif, fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 300, letterSpacing: "-0.02em", color: C.white, marginBottom: "1rem", lineHeight: 1.1 }}>
+                Prouve ce que tu vaux.<br />
+                <em style={{ fontStyle: "italic", color: C.gold }}>Sans CV. Sans filtre.</em>
+              </h2>
+              <p style={{ fontSize: 15, color: C.muted, fontWeight: 300, lineHeight: 1.8, maxWidth: 500, margin: "0 auto 4rem" }}>
+                Des défis concrets. Des questions sur tes valeurs. Un score de potentiel visible par les recruteurs qui cherchent vraiment.
+              </p>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 2, background: C.border, borderRadius: 8, overflow: "hidden" }}>
+              {[
+                ["Crée ton profil", "Pas de CV. Décris qui tu es et ce qui te motive."],
+                ["Passe les défis", "Mises en situation concrètes créées par secteur."],
+                ["Obtiens ton score", "Un score de potentiel visible par tous les recruteurs."],
+                ["Trouve ton match", "Postule ou laisse les recruteurs venir à toi."],
+              ].map(([title, text], i) => (
+                <div key={i} ref={rr(`hw${i + 1}`)} style={{ background: C.bg2, padding: "2.5rem 1.5rem", ...rv(`hw${i + 1}`, i * 0.1) }}>
+                  <div style={{ fontFamily: F.serif, fontSize: 42, fontWeight: 300, color: C.gold, lineHeight: 1, marginBottom: "1rem", opacity: 0.5 }}>0{i + 1}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: C.white, marginBottom: 8 }}>{title}</div>
+                  <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, fontWeight: 300 }}>{text}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* HISTOIRE */}
+        <section style={{ padding: "10rem 4rem", background: "rgba(7,7,10,0.85)", backdropFilter: "blur(10px)" }}>
+          <div style={{ maxWidth: 680, margin: "0 auto" }}>
+            <div ref={rr("h0")} style={{ ...rv("h0") }}>
+              <div style={{ ...s.eyebrow, marginBottom: "1.5rem" }}>
+                <div style={{ width: 20, height: 1, background: C.gold }} />Pourquoi LetMeWork
+              </div>
+              <h2 style={{ fontFamily: F.serif, fontSize: "clamp(32px, 4vw, 52px)", fontWeight: 300, letterSpacing: "-0.02em", color: C.white, marginBottom: "3rem", lineHeight: 1.1 }}>
+                Une idée née d'une<br /><em style={{ fontStyle: "italic", color: C.gold }}>frustration personnelle.</em>
+              </h2>
+            </div>
+            <div ref={rr("h1")} style={{ ...rv("h1", 0.1) }}>
+              {[
+                "Je m'appelle Kévin. Et comme beaucoup, j'ai vécu cette situation : envoyer des candidatures, attendre, ne jamais avoir de retour. Pas parce que je n'avais rien à apporter — mais parce que mon profil ne cochait pas les bonnes cases.",
+                "J'ai réalisé que le problème n'était pas les candidats. C'était le système. Des algorithmes qui filtrent sur des mots-clés, des recruteurs qui cherchent 5 ans d'expérience pour un premier poste.",
+                "Et si on jugeait les gens sur ce qu'ils sont capables de faire, pas sur ce qu'ils ont déjà fait ?",
+              ].map((para, i) => (
+                <p key={i} style={{
+                  fontSize: i === 2 ? 22 : 15, color: i === 2 ? C.white : C.muted,
+                  lineHeight: 1.9, fontWeight: 300, marginBottom: "1.5rem",
+                  fontStyle: i === 2 ? "italic" : "normal",
+                  fontFamily: i === 2 ? F.serif : F.sans,
+                  borderLeft: i === 2 ? `2px solid ${C.gold}` : "none",
+                  paddingLeft: i === 2 ? "1.5rem" : 0,
+                }}>{para}</p>
+              ))}
+            </div>
+            <div ref={rr("h2")} style={{ marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1.5rem", ...rv("h2", 0.2) }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: C.white }}>Bellaïche Kévin</div>
+                <div style={{ fontSize: 12, color: C.gold, marginTop: 3, letterSpacing: "0.06em" }}>Fondateur, LetMeWork</div>
+              </div>
+              <button onClick={() => onEnter("signup")} style={{ background: "transparent", border: `1px solid ${C.borderGold}`, color: C.gold, padding: "10px 24px", borderRadius: 4, fontSize: 13, fontFamily: F.sans, cursor: "pointer", transition: "all 0.3s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.color = C.bg; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.gold; }}>
+                Rejoindre l'aventure →
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section style={{ padding: "10rem 4rem", textAlign: "center", background: "rgba(13,13,18,0.9)", backdropFilter: "blur(10px)", position: "relative" }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 60% 60% at 50% 100%, rgba(200,169,110,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
+          <div ref={rr("cta")} style={{ maxWidth: 600, margin: "0 auto", position: "relative", ...rv("cta") }}>
+            <h2 style={{ fontFamily: F.serif, fontSize: "clamp(40px, 6vw, 72px)", fontWeight: 300, letterSpacing: "-0.02em", lineHeight: 1.0, marginBottom: "1.5rem", color: C.white }}>
+              Ta chance,<br /><em style={{ fontStyle: "italic", color: C.gold }}>c'est maintenant.</em>
+            </h2>
+            <p style={{ fontSize: 15, color: C.muted, fontWeight: 300, lineHeight: 1.8, marginBottom: "3rem" }}>
+              Rejoins LetMeWork et découvre un recrutement basé sur qui tu es, pas sur ce que tu as fait.
+            </p>
+            <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+              <button onClick={() => onEnter("signup")} style={{ background: C.gold, border: "none", color: C.bg, padding: "16px 44px", borderRadius: 4, fontSize: 15, fontFamily: F.sans, fontWeight: 500, cursor: "pointer", transition: "all 0.3s", letterSpacing: "0.02em" }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.goldLight; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 48px rgba(200,169,110,0.3)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
+                Je cherche un emploi →
+              </button>
+              <button onClick={() => onEnter("signup")} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, padding: "16px 36px", borderRadius: 4, fontSize: 15, fontFamily: F.sans, cursor: "pointer", transition: "all 0.3s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.white; e.currentTarget.style.color = C.white; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}>
+                Je recrute
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* FOOTER */}
+        <footer style={{ padding: "1.5rem 4rem", background: "rgba(7,7,10,0.95)", borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+          <div style={{ fontFamily: F.serif, fontSize: 18, color: C.white }}>
+            Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
+          </div>
+          <div style={{ position: "fixed", bottom: "1rem", right: "1rem", fontSize: 11, color: "rgba(240,238,232,0.2)", fontFamily: F.sans }}>Conçu par Bellaïche Kévin</div>
+        </footer>
+      </div>
+    </PageShell>
+  );
+}
+
+// ─── AUTH SCREENS ─────────────────────────────────────────────────────────────
+
+function LoginScreen({ onComplete, onSwitch, onBack }) {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function submit() {
+    if (!form.email || !form.password) { setErr("Remplis tous les champs."); return; }
+    setErr(""); setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+    setLoading(false);
+    if (error) { setErr("Email ou mot de passe incorrect."); return; }
+    const meta = data.user.user_metadata;
+    onComplete({ email: form.email, name: meta.name || form.email.split("@")[0], mode: meta.mode || "candidat", sector: meta.sector || "", company: meta.company || "", id: data.user.id });
+  }
+
+  return (
+    <PageShell>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+        <div style={{ maxWidth: 400, width: "100%", background: "rgba(13,13,18,0.9)", backdropFilter: "blur(20px)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "2.5rem" }}>
+          <div style={{ fontFamily: F.serif, fontSize: 20, color: C.white, marginBottom: "2rem" }}>
+            Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
+          </div>
+          <div style={{ ...s.eyebrow, marginBottom: "0.5rem" }}>Connexion</div>
+          <h2 style={{ fontFamily: F.serif, fontSize: 28, fontWeight: 300, letterSpacing: "-0.5px", marginBottom: "2rem", color: C.white }}>
+            Content de te revoir.
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {[{ k: "email", label: "Email", type: "email", ph: "ton@email.com" }, { k: "password", label: "Mot de passe", type: "password", ph: "••••••••" }].map(f => (
+              <div key={f.k}>
+                <label style={s.label}>{f.label}</label>
+                <input style={s.input} type={f.type} placeholder={f.ph} value={form[f.k]}
+                  onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
+                  onFocus={e => e.target.style.borderColor = C.gold}
+                  onBlur={e => e.target.style.borderColor = C.border}
+                  onKeyDown={e => e.key === "Enter" && submit()} />
+              </div>
+            ))}
+            {err && <div style={{ fontSize: 13, color: C.danger, padding: "8px 12px", background: C.dangerBg, borderRadius: 4 }}>{err}</div>}
+            <button style={{ ...s.btnPrimary, padding: 12, marginTop: 4, opacity: loading ? 0.6 : 1 }} onClick={submit} disabled={loading}>
+              {loading ? "Connexion..." : "Se connecter →"}
+            </button>
+            <div style={{ textAlign: "center", fontSize: 13, color: C.muted }}>
+              Pas encore de compte ?{" "}
+              <button onClick={onSwitch} style={{ background: "none", border: "none", color: C.gold, cursor: "pointer", fontSize: 13, fontFamily: F.sans }}>
+                Rejoindre LetMeWork
+              </button>
+            </div>
+            <button onClick={onBack} style={{ fontSize: 12, color: C.muted, background: "none", border: "none", cursor: "pointer", fontFamily: F.sans, textAlign: "center" }}>
+              ← Retour à l'accueil
+            </button>
+          </div>
+        </div>
+      </div>
+    </PageShell>
+  );
+}
+
+function OnboardingScreen({ onComplete, onBack }) {
+  const [mode, setMode] = useState(null);
+  const [form, setForm] = useState({ name: "", email: "", password: "", sector: "", motivation: "", company: "" });
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function submit() {
+    if (!form.name || !form.email || !form.password) { setErr("Remplis tous les champs obligatoires."); return; }
+    if (mode === "candidat" && !form.sector) { setErr("Choisis un secteur."); return; }
+    if (mode === "recruteur" && !form.company) { setErr("Indique le nom de ton entreprise."); return; }
+    setErr(""); setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email, password: form.password,
+      options: { data: { name: form.name, mode, sector: form.sector || "", company: form.company || "", motivation: form.motivation || "" } }
+    });
+    setLoading(false);
+    if (error) { setErr(error.message); return; }
+    onComplete({ ...form, mode, id: data.user.id });
+  }
+
+  if (!mode) return (
+    <PageShell>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+        <div style={{ maxWidth: 520, width: "100%", textAlign: "center" }}>
+          <div style={{ fontFamily: F.serif, fontSize: 20, color: C.white, marginBottom: "3rem" }}>
+            Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
+          </div>
+          <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, marginBottom: "1.5rem" }}>Beta — Accès anticipé</div>
+          <h1 style={{ fontFamily: F.serif, fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 300, letterSpacing: "-1px", lineHeight: 1.05, marginBottom: "1rem", color: C.white }}>
+            Bienvenue sur<br /><em style={{ fontStyle: "italic", color: C.gold }}>LetMeWork</em>
+          </h1>
+          <p style={{ fontSize: 15, color: C.muted, fontWeight: 300, lineHeight: 1.7, marginBottom: "3rem" }}>Le potentiel avant le papier.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {[
+              { k: "candidat", title: "Je cherche un emploi", sub: "Crée ton profil, passe les défis, trouve ton match" },
+              { k: "recruteur", title: "Je recrute", sub: "Publie une offre, crée tes défis, trouve les bons profils" },
+            ].map(o => (
+              <button key={o.k} onClick={() => setMode(o.k)} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`, borderRadius: 8, padding: "1.5rem", cursor: "pointer", textAlign: "left", transition: "all 0.2s", color: C.white }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderGold; e.currentTarget.style.background = "rgba(200,169,110,0.05)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.transform = "none"; }}>
+                <div style={{ fontSize: 15, fontWeight: 500, color: C.white, marginBottom: 6 }}>{o.title}</div>
+                <div style={{ fontSize: 13, color: C.muted, fontWeight: 300, lineHeight: 1.6 }}>{o.sub}</div>
+              </button>
+            ))}
+          </div>
+          <button onClick={onBack} style={{ marginTop: "2rem", fontSize: 13, color: C.muted, background: "none", border: "none", cursor: "pointer", fontFamily: F.sans }}>
+            ← Retour à l'accueil
+          </button>
+        </div>
+      </div>
+    </PageShell>
+  );
+
+  return (
+    <PageShell>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+        <div style={{ maxWidth: 440, width: "100%", background: "rgba(13,13,18,0.9)", backdropFilter: "blur(20px)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "2.5rem" }}>
+          <button onClick={() => setMode(null)} style={{ ...s.btnGhost, marginBottom: "1.5rem", fontSize: 12, padding: "6px 14px" }}>← Retour</button>
+          <div style={{ ...s.eyebrow, marginBottom: "0.5rem" }}>{mode === "candidat" ? "Compte candidat" : "Compte recruteur"}</div>
+          <h2 style={{ fontFamily: F.serif, fontSize: 26, fontWeight: 300, letterSpacing: "-0.5px", marginBottom: "2rem", color: C.white }}>
+            {mode === "candidat" ? "Dis-nous qui tu es." : "Parle-nous de ton entreprise."}
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {[{ k: "name", label: "Prénom & nom *", ph: "Alex Martin" }, { k: "email", label: "Email *", ph: "alex@email.com", type: "email" }, { k: "password", label: "Mot de passe *", ph: "••••••••", type: "password" }].map(f => (
+              <div key={f.k}>
+                <label style={s.label}>{f.label}</label>
+                <input style={s.input} type={f.type || "text"} placeholder={f.ph} value={form[f.k]}
+                  onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
+                  onFocus={e => e.target.style.borderColor = C.gold}
+                  onBlur={e => e.target.style.borderColor = C.border} />
+              </div>
+            ))}
+            {mode === "candidat" && (
+              <>
+                <div>
+                  <label style={s.label}>Secteur visé *</label>
+                  <select style={{ ...s.input, appearance: "none" }} value={form.sector} onChange={e => setForm(p => ({ ...p, sector: e.target.value }))}>
+                    <option value="">Choisir un secteur</option>
+                    {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={s.label}>Ce qui te motive</label>
+                  <textarea style={s.textarea} placeholder="Ce qui me drive c'est..." value={form.motivation}
+                    onChange={e => setForm(p => ({ ...p, motivation: e.target.value }))}
+                    onFocus={e => e.target.style.borderColor = C.gold}
+                    onBlur={e => e.target.style.borderColor = C.border} />
+                </div>
+              </>
+            )}
+            {mode === "recruteur" && (
+              <div>
+                <label style={s.label}>Entreprise *</label>
+                <input style={s.input} placeholder="Nom de ton entreprise" value={form.company}
+                  onChange={e => setForm(p => ({ ...p, company: e.target.value }))}
+                  onFocus={e => e.target.style.borderColor = C.gold}
+                  onBlur={e => e.target.style.borderColor = C.border} />
+              </div>
+            )}
+            {err && <div style={{ fontSize: 13, color: C.danger, padding: "8px 12px", background: C.dangerBg, borderRadius: 4 }}>{err}</div>}
+            <button style={{ ...s.btnPrimary, padding: 12, marginTop: 4, opacity: loading ? 0.6 : 1 }} onClick={submit} disabled={loading}>
+              {loading ? "Création..." : "Créer mon compte →"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </PageShell>
   );
 }
 
@@ -365,45 +785,43 @@ function Sidebar({ user, page, setPage, onLogout, onHome }) {
 function CandidatDashboard({ user, jobs, onNavigate }) {
   const score = user.globalScore || 0;
   const applied = user.applications?.length || 0;
-
   return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 900 }}>
-      <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Bonjour, {user.name.split(" ")[0]}</div>
-      <h1 style={{ fontFamily: font.serif, fontSize: 32, letterSpacing: -1, marginBottom: "2rem", color: G.ink }}>Ton tableau de bord</h1>
-
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 900 }}>
+      <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />Bonjour, {user.name?.split(" ")[0]}</div>
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 300, letterSpacing: -1, marginBottom: "2.5rem", color: C.white }}>Tableau de bord</h1>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: "2rem" }}>
         {[
-          { label: "Score global", val: score ? `${score}%` : "—", sub: score ? "Potentiel LetMeWork" : "Passe tes défis", color: score > 70 ? G.success : G.muted },
+          { label: "Score global", val: score ? `${score}%` : "—", sub: score ? "Potentiel LetMeWork" : "Passe tes défis", color: score > 70 ? C.success : C.gold },
           { label: "Candidatures", val: applied, sub: `offre${applied > 1 ? "s" : ""} postulée${applied > 1 ? "s" : ""}` },
           { label: "Offres disponibles", val: jobs.length, sub: "correspondant à ton profil" },
         ].map((m, i) => (
-          <div key={i} style={{ background: "#fff", border: `1px solid ${G.paper3}`, borderRadius: 4, padding: "1.25rem 1.5rem" }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G.muted, marginBottom: 8 }}>{m.label}</div>
-            <div style={{ fontFamily: font.serif, fontSize: 36, letterSpacing: -1, color: m.color || G.ink, lineHeight: 1 }}>{m.val}</div>
-            <div style={{ fontSize: 12, color: G.muted, marginTop: 4 }}>{m.sub}</div>
+          <div key={i} style={{ ...s.card, transition: "border-color 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = C.borderGold}
+            onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
+            <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: C.muted, marginBottom: 10 }}>{m.label}</div>
+            <div style={{ fontFamily: F.serif, fontSize: 40, fontWeight: 300, letterSpacing: -1, color: m.color || C.white, lineHeight: 1 }}>{m.val}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>{m.sub}</div>
           </div>
         ))}
       </div>
-
       {!user.globalScore && (
-        <div style={{ background: G.ink, borderRadius: 4, padding: "1.5rem 2rem", marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ ...s.card, background: "rgba(200,169,110,0.06)", border: `1px solid ${C.borderGold}`, marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 500, color: G.paper, marginBottom: 4 }}>Construis ton score de potentiel</div>
-            <div style={{ fontSize: 13, color: "rgba(247,245,240,0.45)", fontWeight: 300 }}>Passe les défis LetMeWork pour que les recruteurs te voient vraiment.</div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: C.white, marginBottom: 4 }}>Construis ton score de potentiel</div>
+            <div style={{ fontSize: 13, color: C.muted, fontWeight: 300 }}>Passe les défis LetMeWork pour que les recruteurs te voient vraiment.</div>
           </div>
-          <button style={{ ...s.btnPrimary, background: G.paper, color: G.ink, whiteSpace: "nowrap", marginLeft: "2rem" }} onClick={() => onNavigate("defis")}>
-            Commencer les défis →
-          </button>
+          <button style={{ ...s.btnPrimary, whiteSpace: "nowrap" }} onClick={() => onNavigate("defis")}>Commencer →</button>
         </div>
       )}
-
-      <h2 style={{ fontSize: 16, fontWeight: 500, marginBottom: "1rem", color: G.ink }}>Offres récentes pour toi</h2>
+      <h2 style={{ fontSize: 16, fontWeight: 500, marginBottom: "1rem", color: C.white }}>Offres récentes</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {jobs.slice(0, 3).map(job => (
-          <div key={job.id} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.25rem" }}>
+          <div key={job.id} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center", transition: "border-color 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = C.borderGold}
+            onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: G.ink }}>{job.role}</div>
-              <div style={{ fontSize: 12, color: G.muted, marginTop: 2 }}>{job.company} · {job.location} · {job.remote ? "Remote" : "Sur site"}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: C.white }}>{job.role}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{job.company} · {job.location}</div>
             </div>
             <button style={s.btnSmall} onClick={() => onNavigate("offres")}>Voir</button>
           </div>
@@ -415,6 +833,7 @@ function CandidatDashboard({ user, jobs, onNavigate }) {
 
 function ChallengesPage({ user, onScoreUpdate }) {
   const challenges = LMW_CHALLENGES[user.sector] || LMW_CHALLENGES["Marketing"];
+  const allChallenges = [...challenges, ...VALUES_QUESTIONS.slice(0, 2)];
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState(user.challengeAnswers || {});
   const [done, setDone] = useState(user.globalScore ? true : false);
@@ -423,82 +842,73 @@ function ChallengesPage({ user, onScoreUpdate }) {
   function saveAnswer(id, val) { setAnswers(p => ({ ...p, [id]: val })); }
 
   function finish() {
-    const allAnswers = { ...answers };
-    // add values questions answers
-    const score = calcScore(allAnswers);
+    const score = calcScore(answers);
     setDone(true);
-    onScoreUpdate(score, allAnswers);
+    onScoreUpdate(score, answers);
   }
 
   if (done) return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 700 }}>
-      <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Défis LetMeWork</div>
-      <h1 style={{ fontFamily: font.serif, fontSize: 32, letterSpacing: -1, marginBottom: "2rem" }}>Ton score de potentiel</h1>
-      <div style={{ ...s.cardDark, marginBottom: "1.5rem" }}>
-        <div style={{ fontSize: 13, color: "rgba(247,245,240,0.4)", marginBottom: 8 }}>Score global LetMeWork</div>
-        <div style={{ fontFamily: font.serif, fontSize: 64, letterSpacing: -2, color: G.paper, lineHeight: 1, marginBottom: "1.5rem" }}>{user.globalScore}%</div>
-        <ScoreBar value={user.globalScore} color="rgba(247,245,240,0.7)" />
-        <div style={{ fontSize: 13, color: "rgba(247,245,240,0.35)", marginTop: 12 }}>Ce score est visible par tous les recruteurs sur LetMeWork.</div>
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 600 }}>
+      <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />Défis LetMeWork</div>
+      <h1 style={{ fontFamily: F.serif, fontSize: 32, fontWeight: 300, letterSpacing: -1, marginBottom: "2rem", color: C.white }}>Ton score de potentiel</h1>
+      <div style={{ ...s.card, background: "rgba(200,169,110,0.06)", border: `1px solid ${C.borderGold}`, marginBottom: "1.5rem" }}>
+        <div style={{ fontSize: 13, color: C.muted, marginBottom: 8 }}>Score global LetMeWork</div>
+        <div style={{ fontFamily: F.serif, fontSize: 64, fontWeight: 300, letterSpacing: -2, color: C.gold, lineHeight: 1, marginBottom: "1.5rem" }}>{user.globalScore}%</div>
+        <ScoreBar value={user.globalScore} />
+        <div style={{ fontSize: 13, color: C.muted, marginTop: 12, fontWeight: 300 }}>Ce score est visible par tous les recruteurs sur LetMeWork.</div>
       </div>
-      <div style={{ fontSize: 13, color: G.muted, lineHeight: 1.7 }}>Tu peux maintenant postuler aux offres. En postulant, tu passeras aussi les défis spécifiques du recruteur pour affiner le score de fit.</div>
     </div>
   );
 
-  const allChallenges = [...challenges, ...VALUES_QUESTIONS.slice(0, 2)];
   const c = allChallenges[current];
-  const progress = ((current) / allChallenges.length) * 100;
+  const progress = (current / allChallenges.length) * 100;
 
   return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 680 }}>
-      <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Défis LetMeWork · {user.sector}</div>
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 680 }}>
+      <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />Défis · {user.sector}</div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <h1 style={{ fontFamily: font.serif, fontSize: 28, letterSpacing: -0.5 }}>Défis & mise en situation</h1>
-        <div style={{ fontSize: 12, color: G.muted }}>{current + 1} / {allChallenges.length}</div>
+        <h1 style={{ fontFamily: F.serif, fontSize: 28, fontWeight: 300, letterSpacing: -0.5, color: C.white }}>Défis & mise en situation</h1>
+        <div style={{ fontSize: 12, color: C.muted }}>{current + 1} / {allChallenges.length}</div>
       </div>
-
-      <div style={{ height: 2, background: G.paper3, borderRadius: 1, marginBottom: "2.5rem", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${progress}%`, background: G.ink, borderRadius: 1, transition: "width 0.4s ease" }} />
+      <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1, marginBottom: "2.5rem", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${progress}%`, background: C.gold, borderRadius: 1, transition: "width 0.4s ease" }} />
       </div>
-
       <div style={{ ...s.card, marginBottom: "1.5rem" }}>
-        <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G.muted, marginBottom: "1rem" }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: C.gold, marginBottom: "1rem" }}>
           {current < challenges.length ? "Mise en situation" : "Valeurs & personnalité"}
         </div>
-        <p style={{ fontSize: 16, lineHeight: 1.7, color: G.ink, marginBottom: "1.5rem" }}>{c.question}</p>
-
+        <p style={{ fontSize: 16, lineHeight: 1.7, color: C.white, marginBottom: "1.5rem" }}>{c.question}</p>
         {c.type === "text" && (
           <textarea style={s.textarea} placeholder="Ta réponse..." value={answers[c.id] || ""}
             onChange={e => saveAnswer(c.id, e.target.value)}
-            onFocus={e => e.target.style.borderColor = G.ink}
-            onBlur={e => e.target.style.borderColor = G.paper3} />
+            onFocus={e => e.target.style.borderColor = C.gold}
+            onBlur={e => e.target.style.borderColor = C.border} />
         )}
-
         {(c.type === "choice" || c.type === "single_select") && (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {c.options.map(opt => (
               <button key={opt} onClick={() => saveAnswer(c.id, opt)} style={{
-                padding: "10px 16px", borderRadius: 2, cursor: "pointer", textAlign: "left",
-                border: `1px solid ${answers[c.id] === opt ? G.ink : G.paper3}`,
-                background: answers[c.id] === opt ? G.ink : "#fff",
-                color: answers[c.id] === opt ? G.paper : G.ink,
-                fontSize: 14, fontFamily: font.sans, transition: "all 0.15s",
+                padding: "10px 16px", borderRadius: 4, cursor: "pointer", textAlign: "left",
+                border: `1px solid ${answers[c.id] === opt ? C.gold : C.border}`,
+                background: answers[c.id] === opt ? "rgba(200,169,110,0.12)" : "rgba(255,255,255,0.02)",
+                color: answers[c.id] === opt ? C.gold : C.muted,
+                fontSize: 14, fontFamily: F.sans, transition: "all 0.15s",
               }}>{opt}</button>
             ))}
           </div>
         )}
-
         {c.type === "rank" && (
           <div>
-            <div style={{ fontSize: 12, color: G.muted, marginBottom: 10 }}>Clique pour classer par ordre de priorité (1 = plus important)</div>
-            {c.options.map((opt, i) => (
-              <div key={opt} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${G.paper3}` }}>
-                <div style={{ width: 20, height: 20, borderRadius: "50%", background: G.paper2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: G.muted }}>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>Clique pour classer par ordre de priorité</div>
+            {c.options.map((opt) => (
+              <div key={opt} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: C.gold }}>
                   {ranking[opt] || "—"}
                 </div>
                 <button onClick={() => {
-                  const next = (Object.keys(ranking).length) + 1;
+                  const next = Object.keys(ranking).length + 1;
                   if (!ranking[opt]) setRanking(p => { const n = { ...p, [opt]: next }; saveAnswer(c.id, JSON.stringify(n)); return n; });
-                }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: G.ink, fontFamily: font.sans }}>
+                }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: C.white, fontFamily: F.sans }}>
                   {opt}
                 </button>
               </div>
@@ -506,16 +916,11 @@ function ChallengesPage({ user, onScoreUpdate }) {
           </div>
         )}
       </div>
-
       <div style={{ display: "flex", gap: 10 }}>
         {current > 0 && <button style={s.btnGhost} onClick={() => setCurrent(p => p - 1)}>← Précédent</button>}
         {current < allChallenges.length - 1
-          ? <button style={{ ...s.btnPrimary, flex: 1 }} onClick={() => setCurrent(p => p + 1)}
-            onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-            onMouseLeave={e => e.currentTarget.style.opacity = 1}>Suivant →</button>
-          : <button style={{ ...s.btnPrimary, flex: 1 }} onClick={finish}
-            onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-            onMouseLeave={e => e.currentTarget.style.opacity = 1}>Terminer et voir mon score →</button>
+          ? <button style={{ ...s.btnPrimary, flex: 1 }} onClick={() => setCurrent(p => p + 1)}>Suivant →</button>
+          : <button style={{ ...s.btnPrimary, flex: 1 }} onClick={finish}>Terminer et voir mon score →</button>
         }
       </div>
     </div>
@@ -524,30 +929,28 @@ function ChallengesPage({ user, onScoreUpdate }) {
 
 function JobsPage({ user, jobs, onApply }) {
   const [selected, setSelected] = useState(null);
-  const [applyStep, setApplyStep] = useState(0); // 0=list, 1=challenges, 2=done
+  const [applyStep, setApplyStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [currentChallenge, setCurrentChallenge] = useState(0);
 
   if (applyStep === 2 && selected) {
     const fitScore = Math.round((user.globalScore || 70) * 0.5 + calcScore(answers) * 0.5);
     return (
-      <div style={{ padding: "2rem 2.5rem", maxWidth: 600 }}>
-        <h1 style={{ fontFamily: font.serif, fontSize: 28, letterSpacing: -0.5, marginBottom: "2rem" }}>Candidature envoyée ✓</h1>
-        <div style={{ ...s.cardDark, marginBottom: "1.5rem" }}>
-          <div style={{ fontSize: 13, color: "rgba(247,245,240,0.4)", marginBottom: 6 }}>{selected.role} · {selected.company}</div>
-          <div style={{ fontFamily: font.serif, fontSize: 52, letterSpacing: -2, color: G.paper, lineHeight: 1, marginBottom: "1.5rem" }}>{fitScore}%</div>
-          <div style={{ fontSize: 13, color: "rgba(247,245,240,0.35)" }}>Score de fit global · visible par {selected.recruiter}</div>
-          <DividerDark />
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[["Défis LetMeWork", user.globalScore || 70], ["Défis recruteur", calcScore(answers)], ["Valeurs & culture", Math.round(65 + Math.random() * 25)]].map(([l, v]) => (
-              <div key={l}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "rgba(247,245,240,0.45)", marginBottom: 4 }}>
-                  <span>{l}</span><span>{v}%</span>
-                </div>
-                <ScoreBar value={v} color="rgba(247,245,240,0.5)" />
+      <div style={{ padding: "2.5rem 3rem", maxWidth: 600 }}>
+        <h1 style={{ fontFamily: F.serif, fontSize: 28, fontWeight: 300, letterSpacing: -0.5, marginBottom: "2rem", color: C.white }}>Candidature envoyée ✓</h1>
+        <div style={{ ...s.card, background: "rgba(200,169,110,0.06)", border: `1px solid ${C.borderGold}`, marginBottom: "1.5rem" }}>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>{selected.role} · {selected.company}</div>
+          <div style={{ fontFamily: F.serif, fontSize: 52, fontWeight: 300, letterSpacing: -2, color: C.gold, lineHeight: 1, marginBottom: "1.5rem" }}>{fitScore}%</div>
+          <div style={{ fontSize: 13, color: C.muted }}>Score de fit global · visible par {selected.recruiter}</div>
+          <Divider />
+          {[["Défis LetMeWork", user.globalScore || 70], ["Défis recruteur", calcScore(answers)], ["Valeurs & culture", Math.round(65 + Math.random() * 25)]].map(([l, v]) => (
+            <div key={l} style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.muted, marginBottom: 4 }}>
+                <span>{l}</span><span style={{ color: C.gold }}>{v}%</span>
               </div>
-            ))}
-          </div>
+              <ScoreBar value={v} />
+            </div>
+          ))}
         </div>
         <button style={s.btnGhost} onClick={() => { setApplyStep(0); setSelected(null); setAnswers({}); setCurrentChallenge(0); }}>← Retour aux offres</button>
       </div>
@@ -557,31 +960,29 @@ function JobsPage({ user, jobs, onApply }) {
   if (applyStep === 1 && selected) {
     const ch = selected.challenges[currentChallenge];
     return (
-      <div style={{ padding: "2rem 2.5rem", maxWidth: 620 }}>
-        <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Défis · {selected.company}</div>
-        <h2 style={{ fontFamily: font.serif, fontSize: 26, letterSpacing: -0.5, marginBottom: "2rem" }}>Défis du recruteur</h2>
-        <div style={{ height: 2, background: G.paper3, borderRadius: 1, marginBottom: "2rem", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${(currentChallenge / selected.challenges.length) * 100}%`, background: G.ink, transition: "width 0.4s" }} />
+      <div style={{ padding: "2.5rem 3rem", maxWidth: 620 }}>
+        <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />Défis · {selected.company}</div>
+        <h2 style={{ fontFamily: F.serif, fontSize: 26, fontWeight: 300, letterSpacing: -0.5, marginBottom: "2rem", color: C.white }}>Défis du recruteur</h2>
+        <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1, marginBottom: "2rem", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${(currentChallenge / selected.challenges.length) * 100}%`, background: C.gold, transition: "width 0.4s" }} />
         </div>
         <div style={{ ...s.card, marginBottom: "1.5rem" }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G.muted, marginBottom: "1rem" }}>
-            Question {currentChallenge + 1} / {selected.challenges.length}
-          </div>
-          <p style={{ fontSize: 16, lineHeight: 1.7, marginBottom: "1.5rem" }}>{ch.question}</p>
+          <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: C.gold, marginBottom: "1rem" }}>Question {currentChallenge + 1} / {selected.challenges.length}</div>
+          <p style={{ fontSize: 16, lineHeight: 1.7, marginBottom: "1.5rem", color: C.white }}>{ch.question}</p>
           {ch.type === "text" ? (
             <textarea style={s.textarea} placeholder="Ta réponse..." value={answers[ch.id] || ""}
               onChange={e => setAnswers(p => ({ ...p, [ch.id]: e.target.value }))}
-              onFocus={e => e.target.style.borderColor = G.ink}
-              onBlur={e => e.target.style.borderColor = G.paper3} />
+              onFocus={e => e.target.style.borderColor = C.gold}
+              onBlur={e => e.target.style.borderColor = C.border} />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {ch.options.map(opt => (
                 <button key={opt} onClick={() => setAnswers(p => ({ ...p, [ch.id]: opt }))} style={{
-                  padding: "10px 16px", borderRadius: 2, cursor: "pointer", textAlign: "left",
-                  border: `1px solid ${answers[ch.id] === opt ? G.ink : G.paper3}`,
-                  background: answers[ch.id] === opt ? G.ink : "#fff",
-                  color: answers[ch.id] === opt ? G.paper : G.ink,
-                  fontSize: 14, fontFamily: font.sans, transition: "all 0.15s",
+                  padding: "10px 16px", borderRadius: 4, cursor: "pointer", textAlign: "left",
+                  border: `1px solid ${answers[ch.id] === opt ? C.gold : C.border}`,
+                  background: answers[ch.id] === opt ? "rgba(200,169,110,0.12)" : "rgba(255,255,255,0.02)",
+                  color: answers[ch.id] === opt ? C.gold : C.muted,
+                  fontSize: 14, fontFamily: F.sans, transition: "all 0.15s",
                 }}>{opt}</button>
               ))}
             </div>
@@ -590,12 +991,8 @@ function JobsPage({ user, jobs, onApply }) {
         <div style={{ display: "flex", gap: 10 }}>
           {currentChallenge > 0 && <button style={s.btnGhost} onClick={() => setCurrentChallenge(p => p - 1)}>← Précédent</button>}
           {currentChallenge < selected.challenges.length - 1
-            ? <button style={{ ...s.btnPrimary, flex: 1 }} onClick={() => setCurrentChallenge(p => p + 1)}
-              onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-              onMouseLeave={e => e.currentTarget.style.opacity = 1}>Suivant →</button>
-            : <button style={{ ...s.btnPrimary, flex: 1 }} onClick={() => { setApplyStep(2); onApply(selected.id); }}
-              onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-              onMouseLeave={e => e.currentTarget.style.opacity = 1}>Envoyer ma candidature →</button>
+            ? <button style={{ ...s.btnPrimary, flex: 1 }} onClick={() => setCurrentChallenge(p => p + 1)}>Suivant →</button>
+            : <button style={{ ...s.btnPrimary, flex: 1 }} onClick={() => { setApplyStep(2); onApply(selected.id); }}>Envoyer ma candidature →</button>
           }
         </div>
       </div>
@@ -603,58 +1000,54 @@ function JobsPage({ user, jobs, onApply }) {
   }
 
   if (selected) return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 700 }}>
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 700 }}>
       <button style={{ ...s.btnGhost, marginBottom: "1.5rem", fontSize: 12 }} onClick={() => setSelected(null)}>← Retour aux offres</button>
       <div style={{ display: "flex", gap: 8, marginBottom: "1rem", flexWrap: "wrap" }}>
         <span style={s.tag}>{selected.sector}</span>
         <span style={s.tag}>{selected.location}</span>
         <span style={s.tag}>{selected.type}</span>
-        {selected.remote && <span style={s.badge("green")}>Remote ✓</span>}
+        {selected.remote && <GoldBadge>Remote ✓</GoldBadge>}
       </div>
-      <h1 style={{ fontFamily: font.serif, fontSize: 32, letterSpacing: -1, marginBottom: 6 }}>{selected.role}</h1>
-      <div style={{ fontSize: 14, color: G.muted, marginBottom: "2rem" }}>{selected.company} · {selected.recruiter}</div>
+      <h1 style={{ fontFamily: F.serif, fontSize: 32, fontWeight: 300, letterSpacing: -1, marginBottom: 6, color: C.white }}>{selected.role}</h1>
+      <div style={{ fontSize: 14, color: C.muted, marginBottom: "2rem" }}>{selected.company} · {selected.recruiter}</div>
       <Divider />
-      <p style={{ fontSize: 15, color: G.muted, lineHeight: 1.8, fontWeight: 300, marginBottom: "2rem" }}>{selected.description}</p>
+      <p style={{ fontSize: 15, color: C.muted, lineHeight: 1.8, fontWeight: 300, marginBottom: "2rem" }}>{selected.description}</p>
       <div style={{ marginBottom: "2rem" }}>
-        <div style={{ fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: G.muted, marginBottom: 10 }}>Valeurs de l'équipe</div>
-        <div style={{ display: "flex", gap: 8 }}>{selected.values.map(v => <span key={v} style={s.badge("gold")}>{v}</span>)}</div>
+        <div style={{ fontSize: 11, color: C.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>Valeurs de l'équipe</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{selected.values.map(v => <GoldBadge key={v}>{v}</GoldBadge>)}</div>
       </div>
-      <div style={{ ...s.card, background: G.paper2, marginBottom: "2rem" }}>
-        <div style={{ fontSize: 13, color: G.muted, lineHeight: 1.7 }}>
-          En postulant, tu passeras <strong style={{ color: G.ink }}>{selected.challenges.length} défis</strong> créés par {selected.recruiter}. L'IA combinera ensuite ton score LetMeWork ({user.globalScore || "—"}%) avec ce score pour calculer ton fit global.
+      <div style={{ ...s.card, background: "rgba(200,169,110,0.04)", border: `1px solid ${C.borderGold}`, marginBottom: "2rem" }}>
+        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, fontWeight: 300 }}>
+          En postulant, tu passeras <span style={{ color: C.gold }}>{selected.challenges.length} défis</span> créés par {selected.recruiter}. L'IA combinera ton score LetMeWork ({user.globalScore || "—"}%) avec ce score pour calculer ton fit global.
         </div>
       </div>
-      <button style={{ ...s.btnPrimary, padding: "13px 28px" }} onClick={() => setApplyStep(1)}
-        onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-        onMouseLeave={e => e.currentTarget.style.opacity = 1}>
-        Postuler et passer les défis →
-      </button>
+      <button style={{ ...s.btnPrimary, padding: "13px 28px" }} onClick={() => setApplyStep(1)}>Postuler et passer les défis →</button>
     </div>
   );
 
   return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 800 }}>
-      <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Offres disponibles</div>
-      <h1 style={{ fontFamily: font.serif, fontSize: 32, letterSpacing: -1, marginBottom: "2rem" }}>Toutes les offres</h1>
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 800 }}>
+      <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />Offres disponibles</div>
+      <h1 style={{ fontFamily: F.serif, fontSize: 32, fontWeight: 300, letterSpacing: -1, marginBottom: "2rem", color: C.white }}>Toutes les offres</h1>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {jobs.map(job => (
-          <div key={job.id} style={{ ...s.card, cursor: "pointer", transition: "border-color 0.2s, transform 0.15s" }}
+          <div key={job.id} style={{ ...s.card, cursor: "pointer", transition: "all 0.2s" }}
             onClick={() => setSelected(job)}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = G.ink; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = G.paper3; e.currentTarget.style.transform = "translateY(0)"; }}>
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderGold; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.background = "rgba(200,169,110,0.04)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 500, color: G.ink, marginBottom: 4 }}>{job.role}</div>
-                <div style={{ fontSize: 13, color: G.muted }}>{job.company} · {job.location}</div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: C.white, marginBottom: 4 }}>{job.role}</div>
+                <div style={{ fontSize: 13, color: C.muted }}>{job.company} · {job.location}</div>
                 <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
                   <span style={s.tag}>{job.sector}</span>
                   <span style={s.tag}>{job.type}</span>
-                  {job.remote && <span style={s.badge("green")}>Remote</span>}
+                  {job.remote && <GoldBadge>Remote</GoldBadge>}
                 </div>
               </div>
               <div style={{ textAlign: "right", flexShrink: 0, marginLeft: "1rem" }}>
-                <div style={{ fontSize: 11, color: G.muted, marginBottom: 4 }}>{job.challenges.length} défis</div>
-                <div style={{ fontSize: 11, color: G.muted }}>{job.applications || 0} candidats</div>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{job.challenges.length} défis</div>
+                <div style={{ fontSize: 11, color: C.muted }}>{job.applications || 0} candidats</div>
               </div>
             </div>
           </div>
@@ -670,17 +1063,15 @@ function ProfilPage({ user, onUpdate }) {
   function save() { onUpdate(form); setSaved(true); setTimeout(() => setSaved(false), 2000); }
 
   return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 600 }}>
-      <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Mon profil</div>
-      <h1 style={{ fontFamily: font.serif, fontSize: 32, letterSpacing: -1, marginBottom: "2rem" }}>Tes informations</h1>
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 600 }}>
+      <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />Mon profil</div>
+      <h1 style={{ fontFamily: F.serif, fontSize: 32, fontWeight: 300, letterSpacing: -1, marginBottom: "2rem", color: C.white }}>Tes informations</h1>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {[{ k: "name", label: "Nom complet" }].map(f => (
-          <div key={f.k}>
-            <label style={s.label}>{f.label}</label>
-            <input style={s.input} value={form[f.k]} onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
-              onFocus={e => e.target.style.borderColor = G.ink} onBlur={e => e.target.style.borderColor = G.paper3} />
-          </div>
-        ))}
+        <div>
+          <label style={s.label}>Nom complet</label>
+          <input style={s.input} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+            onFocus={e => e.target.style.borderColor = C.gold} onBlur={e => e.target.style.borderColor = C.border} />
+        </div>
         <div>
           <label style={s.label}>Secteur visé</label>
           <select style={{ ...s.input, appearance: "none" }} value={form.sector} onChange={e => setForm(p => ({ ...p, sector: e.target.value }))}>
@@ -690,20 +1081,16 @@ function ProfilPage({ user, onUpdate }) {
         <div>
           <label style={s.label}>Ma motivation</label>
           <textarea style={s.textarea} value={form.motivation} onChange={e => setForm(p => ({ ...p, motivation: e.target.value }))}
-            onFocus={e => e.target.style.borderColor = G.ink} onBlur={e => e.target.style.borderColor = G.paper3} />
+            onFocus={e => e.target.style.borderColor = C.gold} onBlur={e => e.target.style.borderColor = C.border} />
         </div>
-        <button style={{ ...s.btnPrimary, padding: 12 }} onClick={save}
-          onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-          onMouseLeave={e => e.currentTarget.style.opacity = 1}>
-          {saved ? "Sauvegardé ✓" : "Sauvegarder"}
-        </button>
+        <button style={{ ...s.btnPrimary, padding: 12 }} onClick={save}>{saved ? "Sauvegardé ✓" : "Sauvegarder"}</button>
         {user.globalScore && (
           <>
             <Divider />
-            <div style={s.cardDark}>
-              <div style={{ fontSize: 13, color: "rgba(247,245,240,0.4)", marginBottom: 8 }}>Ton score LetMeWork</div>
-              <div style={{ fontFamily: font.serif, fontSize: 48, letterSpacing: -2, color: G.paper, lineHeight: 1, marginBottom: "1rem" }}>{user.globalScore}%</div>
-              <ScoreBar value={user.globalScore} color="rgba(247,245,240,0.6)" />
+            <div style={{ ...s.card, background: "rgba(200,169,110,0.06)", border: `1px solid ${C.borderGold}` }}>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 8 }}>Ton score LetMeWork</div>
+              <div style={{ fontFamily: F.serif, fontSize: 48, fontWeight: 300, letterSpacing: -2, color: C.gold, lineHeight: 1, marginBottom: "1rem" }}>{user.globalScore}%</div>
+              <ScoreBar value={user.globalScore} />
             </div>
           </>
         )}
@@ -717,53 +1104,38 @@ function ProfilPage({ user, onUpdate }) {
 function RecruteurDashboard({ user, jobs, onNavigate }) {
   const myJobs = jobs.filter(j => j.recruiterId === user.id);
   const totalApps = myJobs.reduce((s, j) => s + (j.applications || 0), 0);
-
   return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 900 }}>
-      <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />{user.company}</div>
-      <h1 style={{ fontFamily: font.serif, fontSize: 32, letterSpacing: -1, marginBottom: "2rem" }}>Tableau de bord recruteur</h1>
-
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 900 }}>
+      <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />{user.company}</div>
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 300, letterSpacing: -1, marginBottom: "2.5rem", color: C.white }}>Tableau de bord recruteur</h1>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: "2rem" }}>
-        {[
-          { label: "Offres actives", val: myJobs.length, sub: "en ligne" },
-          { label: "Candidatures reçues", val: totalApps, sub: "au total" },
-          { label: "Profils dans le vivier", val: 0, sub: "à contacter" },
-        ].map((m, i) => (
-          <div key={i} style={{ background: "#fff", border: `1px solid ${G.paper3}`, borderRadius: 4, padding: "1.25rem 1.5rem" }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G.muted, marginBottom: 8 }}>{m.label}</div>
-            <div style={{ fontFamily: font.serif, fontSize: 36, letterSpacing: -1, color: G.ink, lineHeight: 1 }}>{m.val}</div>
-            <div style={{ fontSize: 12, color: G.muted, marginTop: 4 }}>{m.sub}</div>
+        {[{ label: "Offres actives", val: myJobs.length }, { label: "Candidatures reçues", val: totalApps }, { label: "Profils dans le vivier", val: 0 }].map((m, i) => (
+          <div key={i} style={{ ...s.card }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: C.muted, marginBottom: 10 }}>{m.label}</div>
+            <div style={{ fontFamily: F.serif, fontSize: 40, fontWeight: 300, letterSpacing: -1, color: C.white, lineHeight: 1 }}>{m.val}</div>
           </div>
         ))}
       </div>
-
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-        <h2 style={{ fontSize: 16, fontWeight: 500, color: G.ink }}>Tes offres</h2>
-        <button style={s.btnPrimary} onClick={() => onNavigate("nouvelle-offre")}
-          onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-          onMouseLeave={e => e.currentTarget.style.opacity = 1}>
-          + Nouvelle offre
-        </button>
+        <h2 style={{ fontSize: 16, fontWeight: 500, color: C.white }}>Tes offres</h2>
+        <button style={s.btnPrimary} onClick={() => onNavigate("nouvelle-offre")}>+ Nouvelle offre</button>
       </div>
-
       {myJobs.length === 0 ? (
-        <div style={{ ...s.card, textAlign: "center", padding: "3rem", color: G.muted }}>
-          <div style={{ fontFamily: font.serif, fontSize: 22, marginBottom: 8, color: G.ink }}>Aucune offre pour l'instant</div>
-          <div style={{ fontSize: 14, marginBottom: "1.5rem" }}>Publie ta première offre et commence à recevoir des candidats qualifiés.</div>
-          <button style={s.btnPrimary} onClick={() => onNavigate("nouvelle-offre")}
-            onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-            onMouseLeave={e => e.currentTarget.style.opacity = 1}>Créer une offre →</button>
+        <div style={{ ...s.card, textAlign: "center", padding: "3rem" }}>
+          <div style={{ fontFamily: F.serif, fontSize: 22, marginBottom: 8, color: C.white }}>Aucune offre pour l'instant</div>
+          <div style={{ fontSize: 14, color: C.muted, marginBottom: "1.5rem" }}>Publie ta première offre et commence à recevoir des candidats qualifiés.</div>
+          <button style={s.btnPrimary} onClick={() => onNavigate("nouvelle-offre")}>Créer une offre →</button>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {myJobs.map(job => (
-            <div key={job.id} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.25rem" }}>
+            <div key={job.id} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: G.ink }}>{job.role}</div>
-                <div style={{ fontSize: 12, color: G.muted, marginTop: 2 }}>{job.sector} · {job.location} · {job.challenges?.length || 0} défis</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.white }}>{job.role}</div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{job.sector} · {job.location}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={s.badge("green")}>{job.applications || 0} candidats</span>
+                <SuccessBadge>{job.applications || 0} candidats</SuccessBadge>
                 <button style={s.btnSmall} onClick={() => onNavigate("candidats")}>Voir</button>
               </div>
             </div>
@@ -779,7 +1151,6 @@ function NouvelleOffrePage({ user, onPublish }) {
   const [form, setForm] = useState({ role: "", sector: "", location: "", type: "CDI", remote: false, description: "", values: [] });
   const [challenges, setChallenges] = useState([{ id: "c1", question: "", type: "text" }]);
   const [published, setPublished] = useState(false);
-
   const valueOptions = ["Curiosité", "Rigueur", "Autonomie", "Esprit d'équipe", "Ambition", "Bienveillance", "Impact", "Authenticité", "Résilience"];
 
   function addChallenge() { setChallenges(p => [...p, { id: `c${p.length + 1}`, question: "", type: "text" }]); }
@@ -794,10 +1165,10 @@ function NouvelleOffrePage({ user, onPublish }) {
   }
 
   if (published) return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 600 }}>
-      <h1 style={{ fontFamily: font.serif, fontSize: 32, letterSpacing: -1, marginBottom: "1rem" }}>Offre publiée ✓</h1>
-      <div style={{ ...s.card, background: G.paper2, marginBottom: "1.5rem" }}>
-        <div style={{ fontSize: 14, color: G.muted, lineHeight: 1.7 }}>Ton offre est maintenant visible par les candidats. Tu recevras une notification dès qu'un candidat postule avec son score de fit.</div>
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 600 }}>
+      <h1 style={{ fontFamily: F.serif, fontSize: 32, fontWeight: 300, letterSpacing: -1, marginBottom: "1rem", color: C.white }}>Offre publiée ✓</h1>
+      <div style={{ ...s.card, background: "rgba(200,169,110,0.06)", border: `1px solid ${C.borderGold}`, marginBottom: "1.5rem" }}>
+        <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, fontWeight: 300 }}>Ton offre est maintenant visible par les candidats.</div>
       </div>
       <button style={s.btnGhost} onClick={() => { setPublished(false); setStep(0); setForm({ role: "", sector: "", location: "", type: "CDI", remote: false, description: "", values: [] }); setChallenges([{ id: "c1", question: "", type: "text" }]); }}>
         Créer une autre offre
@@ -806,25 +1177,23 @@ function NouvelleOffrePage({ user, onPublish }) {
   );
 
   return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 680 }}>
-      <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Nouvelle offre</div>
-      <h1 style={{ fontFamily: font.serif, fontSize: 28, letterSpacing: -0.5, marginBottom: "2rem" }}>
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 680 }}>
+      <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />Nouvelle offre</div>
+      <h1 style={{ fontFamily: F.serif, fontSize: 28, fontWeight: 300, letterSpacing: -0.5, marginBottom: "2rem", color: C.white }}>
         {step === 0 ? "Décris le poste" : "Crée tes défis"}
       </h1>
-
       <div style={{ display: "flex", gap: 8, marginBottom: "2rem" }}>
         {["Infos du poste", "Tes défis"].map((l, i) => (
-          <div key={i} style={{ flex: 1, height: 3, borderRadius: 1, background: i <= step ? G.ink : G.paper3, transition: "background 0.3s" }} />
+          <div key={i} style={{ flex: 1, height: 3, borderRadius: 1, background: i <= step ? C.gold : "rgba(255,255,255,0.06)", transition: "background 0.3s" }} />
         ))}
       </div>
-
       {step === 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
             <label style={s.label}>Intitulé du poste *</label>
             <input style={s.input} placeholder="Ex: Chargé(e) de Marketing Digital" value={form.role}
               onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
-              onFocus={e => e.target.style.borderColor = G.ink} onBlur={e => e.target.style.borderColor = G.paper3} />
+              onFocus={e => e.target.style.borderColor = C.gold} onBlur={e => e.target.style.borderColor = C.border} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
@@ -838,87 +1207,74 @@ function NouvelleOffrePage({ user, onPublish }) {
               <label style={s.label}>Ville</label>
               <input style={s.input} placeholder="Paris" value={form.location}
                 onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
-                onFocus={e => e.target.style.borderColor = G.ink} onBlur={e => e.target.style.borderColor = G.paper3} />
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div style={{ flex: 1 }}>
-              <label style={s.label}>Type de contrat</label>
-              <select style={{ ...s.input, appearance: "none" }} value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
-                {["CDI", "CDD", "Stage", "Alternance", "Freelance"].map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 18 }}>
-              <input type="checkbox" id="remote" checked={form.remote} onChange={e => setForm(p => ({ ...p, remote: e.target.checked }))} />
-              <label htmlFor="remote" style={{ fontSize: 13, color: G.ink, cursor: "pointer" }}>Remote possible</label>
+                onFocus={e => e.target.style.borderColor = C.gold} onBlur={e => e.target.style.borderColor = C.border} />
             </div>
           </div>
           <div>
-            <label style={s.label}>Description du poste</label>
-            <textarea style={s.textarea} placeholder="Ce qu'on cherche vraiment, au-delà du diplôme et de l'expérience..." value={form.description}
+            <label style={s.label}>Type de contrat</label>
+            <select style={{ ...s.input, appearance: "none" }} value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
+              {["CDI", "CDD", "Stage", "Alternance", "Freelance"].map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input type="checkbox" id="remote" checked={form.remote} onChange={e => setForm(p => ({ ...p, remote: e.target.checked }))} />
+            <label htmlFor="remote" style={{ fontSize: 13, color: C.muted, cursor: "pointer" }}>Remote possible</label>
+          </div>
+          <div>
+            <label style={s.label}>Description</label>
+            <textarea style={s.textarea} placeholder="Ce qu'on cherche vraiment..." value={form.description}
               onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-              onFocus={e => e.target.style.borderColor = G.ink} onBlur={e => e.target.style.borderColor = G.paper3} />
+              onFocus={e => e.target.style.borderColor = C.gold} onBlur={e => e.target.style.borderColor = C.border} />
           </div>
           <div>
             <label style={s.label}>Valeurs de l'équipe</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {valueOptions.map(v => (
                 <button key={v} onClick={() => setForm(p => ({ ...p, values: p.values.includes(v) ? p.values.filter(x => x !== v) : [...p.values, v] }))} style={{
-                  padding: "5px 14px", borderRadius: 20, cursor: "pointer", fontSize: 13, fontFamily: font.sans,
-                  background: form.values.includes(v) ? G.ink : "#fff",
-                  color: form.values.includes(v) ? G.paper : G.ink,
-                  border: `1px solid ${form.values.includes(v) ? G.ink : G.paper3}`,
+                  padding: "5px 14px", borderRadius: 20, cursor: "pointer", fontSize: 13, fontFamily: F.sans,
+                  background: form.values.includes(v) ? "rgba(200,169,110,0.15)" : "rgba(255,255,255,0.03)",
+                  color: form.values.includes(v) ? C.gold : C.muted,
+                  border: `1px solid ${form.values.includes(v) ? C.borderGold : C.border}`,
                   transition: "all 0.15s",
                 }}>{v}</button>
               ))}
             </div>
           </div>
-          <button style={{ ...s.btnPrimary, padding: 12 }} onClick={() => { if (form.role && form.sector) setStep(1); }}
-            onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-            onMouseLeave={e => e.currentTarget.style.opacity = 1}>
-            Continuer → Créer mes défis
-          </button>
+          <button style={{ ...s.btnPrimary, padding: 12 }} onClick={() => { if (form.role && form.sector) setStep(1); }}>Continuer →</button>
         </div>
       )}
-
       {step === 1 && (
         <div>
-          <div style={{ fontSize: 13, color: G.muted, lineHeight: 1.7, marginBottom: "1.5rem", padding: "12px 16px", background: G.paper2, borderRadius: 2 }}>
-            Crée des mises en situation spécifiques à ton poste. Ces défis seront complétés par les candidats en plus de leurs défis LetMeWork.
+          <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, marginBottom: "1.5rem", padding: "12px 16px", background: "rgba(200,169,110,0.06)", borderRadius: 4, border: `1px solid ${C.borderGold}`, fontWeight: 300 }}>
+            Crée des mises en situation spécifiques à ton poste.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: "1.5rem" }}>
             {challenges.map((c, i) => (
-              <div key={c.id} style={{ ...s.card, position: "relative" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, color: G.muted, letterSpacing: "0.08em" }}>Défi {i + 1}</div>
-                  {challenges.length > 1 && (
-                    <button onClick={() => removeChallenge(i)} style={{ fontSize: 12, color: G.muted, background: "none", border: "none", cursor: "pointer" }}>Supprimer</button>
-                  )}
+              <div key={c.id} style={{ ...s.card }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, color: C.muted }}>Défi {i + 1}</div>
+                  {challenges.length > 1 && <button onClick={() => removeChallenge(i)} style={{ fontSize: 12, color: C.muted, background: "none", border: "none", cursor: "pointer" }}>Supprimer</button>}
                 </div>
-                <textarea style={{ ...s.textarea, minHeight: 80 }} placeholder="Quelle mise en situation veux-tu proposer ?"
+                <textarea style={{ ...s.textarea, minHeight: 80 }} placeholder="Quelle mise en situation ?"
                   value={c.question} onChange={e => updateChallenge(i, "question", e.target.value)}
-                  onFocus={e => e.target.style.borderColor = G.ink} onBlur={e => e.target.style.borderColor = G.paper3} />
-                <div style={{ marginTop: 8 }}>
-                  <label style={s.label}>Type de réponse</label>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {["text", "choice"].map(t => (
-                      <button key={t} onClick={() => updateChallenge(i, "type", t)} style={{
-                        padding: "5px 14px", borderRadius: 2, cursor: "pointer", fontSize: 12, fontFamily: font.sans,
-                        background: c.type === t ? G.ink : "#fff",
-                        color: c.type === t ? G.paper : G.ink,
-                        border: `1px solid ${c.type === t ? G.ink : G.paper3}`,
-                        transition: "all 0.15s",
-                      }}>{t === "text" ? "Texte libre" : "Choix multiple"}</button>
-                    ))}
-                  </div>
+                  onFocus={e => e.target.style.borderColor = C.gold} onBlur={e => e.target.style.borderColor = C.border} />
+                <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                  {["text", "choice"].map(t => (
+                    <button key={t} onClick={() => updateChallenge(i, "type", t)} style={{
+                      padding: "5px 14px", borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F.sans,
+                      background: c.type === t ? "rgba(200,169,110,0.15)" : "rgba(255,255,255,0.03)",
+                      color: c.type === t ? C.gold : C.muted,
+                      border: `1px solid ${c.type === t ? C.borderGold : C.border}`,
+                    }}>{t === "text" ? "Texte libre" : "Choix multiple"}</button>
+                  ))}
                 </div>
                 {c.type === "choice" && (
                   <div style={{ marginTop: 10 }}>
                     <label style={s.label}>Options (séparées par une virgule)</label>
-                    <input style={s.input} placeholder="Option A, Option B, Option C, Option D"
+                    <input style={s.input} placeholder="Option A, Option B, Option C"
                       value={c.options?.join(", ") || ""}
                       onChange={e => updateChallenge(i, "options", e.target.value.split(",").map(x => x.trim()))}
-                      onFocus={e => e.target.style.borderColor = G.ink} onBlur={e => e.target.style.borderColor = G.paper3} />
+                      onFocus={e => e.target.style.borderColor = C.gold} onBlur={e => e.target.style.borderColor = C.border} />
                   </div>
                 )}
               </div>
@@ -926,11 +1282,7 @@ function NouvelleOffrePage({ user, onPublish }) {
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <button style={s.btnGhost} onClick={addChallenge}>+ Ajouter un défi</button>
-            <button style={{ ...s.btnPrimary, flex: 1 }} onClick={publish}
-              onMouseEnter={e => e.currentTarget.style.opacity = 0.75}
-              onMouseLeave={e => e.currentTarget.style.opacity = 1}>
-              Publier l'offre →
-            </button>
+            <button style={{ ...s.btnPrimary, flex: 1 }} onClick={publish}>Publier l'offre →</button>
           </div>
           <button style={{ ...s.btnGhost, marginTop: 10, width: "100%" }} onClick={() => setStep(0)}>← Modifier les infos</button>
         </div>
@@ -948,31 +1300,32 @@ function CandidatsPage({ jobs, user }) {
   ];
 
   return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 800 }}>
-      <div style={s.eyebrow}><div style={{ width: 20, height: 1, background: G.muted }} />Candidats</div>
-      <h1 style={{ fontFamily: font.serif, fontSize: 32, letterSpacing: -1, marginBottom: "2rem" }}>Candidatures reçues</h1>
-
+    <div style={{ padding: "2.5rem 3rem", maxWidth: 800 }}>
+      <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />Candidats</div>
+      <h1 style={{ fontFamily: F.serif, fontSize: 32, fontWeight: 300, letterSpacing: -1, marginBottom: "2rem", color: C.white }}>Candidatures reçues</h1>
       {myJobs.length === 0 ? (
-        <div style={{ ...s.card, textAlign: "center", padding: "3rem", color: G.muted }}>
-          <div style={{ fontFamily: font.serif, fontSize: 20, color: G.ink, marginBottom: 8 }}>Aucune candidature pour l'instant</div>
-          <div style={{ fontSize: 14 }}>Publie une offre pour commencer à recevoir des candidats qualifiés.</div>
+        <div style={{ ...s.card, textAlign: "center", padding: "3rem" }}>
+          <div style={{ fontFamily: F.serif, fontSize: 20, color: C.white, marginBottom: 8 }}>Aucune candidature pour l'instant</div>
+          <div style={{ fontSize: 14, color: C.muted }}>Publie une offre pour commencer à recevoir des candidats qualifiés.</div>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {mockCandidates.map((c, i) => (
-            <div key={i} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={i} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center", transition: "border-color 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = C.borderGold}
+              onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
               <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: G.paper2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 500, color: G.muted, flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(200,169,110,0.1)", border: `1px solid ${C.borderGold}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 500, color: C.gold, flexShrink: 0 }}>
                   {c.name.split(" ").map(n => n[0]).join("")}
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: G.ink }}>{c.name}</div>
-                  <div style={{ fontSize: 12, color: G.muted, marginTop: 2 }}>{c.job} · Score : {c.score}%</div>
-                  <div style={{ marginTop: 8, width: 160 }}><ScoreBar value={c.score} color={c.score > 85 ? G.success : G.muted} /></div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: C.white }}>{c.name}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{c.job} · Score : <span style={{ color: C.gold }}>{c.score}%</span></div>
+                  <div style={{ marginTop: 8, width: 160 }}><ScoreBar value={c.score} /></div>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <span style={s.badge(c.status === "nouveau" ? "gold" : "green")}>{c.status === "nouveau" ? "Nouveau" : "En cours"}</span>
+                {c.status === "nouveau" ? <GoldBadge>Nouveau</GoldBadge> : <SuccessBadge>En cours</SuccessBadge>}
                 <button style={s.btnSmall}>Voir le profil</button>
               </div>
             </div>
@@ -985,380 +1338,22 @@ function CandidatsPage({ jobs, user }) {
 
 // ─── APP ──────────────────────────────────────────────────────────────────────
 
-/// ─── LANDING PAGE V3 — DARK PREMIUM ──────────────────────────────────────────
-// Replace the existing LandingPage function in App.jsx with this one
-
-function LandingPage({ onEnter }) {
-  const cursorRef = useRef(null);
-  const cursorDotRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [loaded, setLoaded] = useState(false);
-  const [heroText] = useState("Le potentiel avant le papier.");
-  const [displayedChars, setDisplayedChars] = useState(0);
-  const [scrollY, setScrollY] = useState(0);
-  const [hoveredBtn, setHoveredBtn] = useState(null);
-
-  // Cursor
-  useEffect(() => {
-    let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
-    let tx = cx, ty = cy;
-    const move = (e) => { tx = e.clientX; ty = e.clientY; };
-    window.addEventListener("mousemove", move);
-    let raf;
-    const animate = () => {
-      cx += (tx - cx) * 0.12;
-      cy += (ty - cy) * 0.12;
-      if (cursorRef.current) { cursorRef.current.style.left = tx + "px"; cursorRef.current.style.top = ty + "px"; }
-      if (cursorDotRef.current) { cursorDotRef.current.style.left = cx + "px"; cursorDotRef.current.style.top = cy + "px"; }
-      raf = requestAnimationFrame(animate);
-    };
-    animate();
-    return () => { window.removeEventListener("mousemove", move); cancelAnimationFrame(raf); };
-  }, []);
-
-  // Particles canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const particles = Array.from({ length: 60 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.2 + 0.3,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      o: Math.random() * 0.4 + 0.1,
-    }));
-    let raf;
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = canvas.width;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.y < 0) p.y = canvas.height;
-        if (p.y > canvas.height) p.y = 0;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200,169,110,${p.o})`;
-        ctx.fill();
-      });
-      // Draw connections
-      particles.forEach((a, i) => {
-        particles.slice(i + 1).forEach(b => {
-          const d = Math.hypot(a.x - b.x, a.y - b.y);
-          if (d < 120) {
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.strokeStyle = `rgba(200,169,110,${0.06 * (1 - d / 120)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        });
-      });
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    window.addEventListener("resize", resize);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
-  }, []);
-
-  // Text reveal
-  useEffect(() => {
-    setTimeout(() => setLoaded(true), 300);
-    let i = 0;
-    const interval = setInterval(() => {
-      i++;
-      setDisplayedChars(i);
-      if (i >= heroText.length) clearInterval(interval);
-    }, 45);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Scroll
-  useEffect(() => {
-    const onScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Scroll reveal hook
-  const [revealed, setRevealed] = useState({});
-  const revealRefs = useRef({});
-  useEffect(() => {
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) setRevealed(p => ({ ...p, [e.target.dataset.rid]: true })); });
-    }, { threshold: 0.1 });
-    Object.values(revealRefs.current).forEach(el => el && obs.observe(el));
-    return () => obs.disconnect();
-  }, []);
-
-  function rref(id) { return el => { if (el) { el.dataset.rid = id; revealRefs.current[id] = el; } }; }
-  function rev(id, delay = 0) {
-    return {
-      opacity: revealed[id] ? 1 : 0,
-      transform: revealed[id] ? "translateY(0)" : "translateY(30px)",
-      transition: `opacity 0.8s ${delay}s cubic-bezier(0.4,0,0.2,1), transform 0.8s ${delay}s cubic-bezier(0.4,0,0.2,1)`,
-    };
-  }
-
-  const C = { bg: "#080807", bg2: "#0f0f0d", bg3: "#161614", gold: "#c8a96e", goldLight: "#e8d4a8", white: "#f5f3ee", muted: "rgba(245,243,238,0.4)", border: "rgba(245,243,238,0.08)" };
-  const F = { serif: "'Cormorant Garamond', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
-
-  const marqueeItems = ["Potentiel", "Culture Fit", "Mise en situation", "Reconversion", "Matching intelligent", "Évaluation hybride", "Premier emploi", "Score de fit", "Sans diplôme", "Niaque"];
-
-  return (
-    <div style={{ background: C.bg, color: C.white, fontFamily: F.sans, overflowX: "hidden", cursor: "none" }}>
-
-      {/* GOOGLE FONTS */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body { cursor: none !important; }
-        * { cursor: none !important; }
-        ::selection { background: rgba(200,169,110,0.3); color: #f5f3ee; }
-        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        @keyframes shimmer { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
-        @keyframes lineGrow { from { width: 0; } to { width: 100%; } }
-        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-      `}</style>
-
-      {/* CUSTOM CURSOR */}
-      <div ref={cursorRef} style={{ position: "fixed", width: 8, height: 8, background: C.gold, borderRadius: "50%", pointerEvents: "none", zIndex: 9999, transform: "translate(-50%,-50%)", transition: "transform 0.1s" }} />
-      <div ref={cursorDotRef} style={{ position: "fixed", width: 40, height: 40, border: `1px solid rgba(200,169,110,0.4)`, borderRadius: "50%", pointerEvents: "none", zIndex: 9998, transform: "translate(-50%,-50%)", transition: "width 0.3s, height 0.3s, opacity 0.3s" }} />
-
-      {/* NAV */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.5rem 4rem", background: `rgba(8,8,7,${Math.min(scrollY / 100, 0.95)})`, backdropFilter: "blur(20px)", borderBottom: scrollY > 50 ? `1px solid ${C.border}` : "1px solid transparent", transition: "all 0.4s" }}>
-        <div style={{ fontFamily: F.serif, fontSize: 22, fontWeight: 400, color: C.white, letterSpacing: "0.02em" }}>
-          Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
-        </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <button onClick={() => onEnter("login")} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, padding: "9px 22px", borderRadius: 2, fontSize: 13, fontFamily: F.sans, cursor: "none", transition: "all 0.3s" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.color = C.gold; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}>
-            Se connecter
-          </button>
-          <button onClick={() => onEnter("signup")} style={{ background: C.gold, border: "none", color: C.bg, padding: "9px 22px", borderRadius: 2, fontSize: 13, fontFamily: F.sans, fontWeight: 500, cursor: "none", transition: "all 0.3s" }}
-            onMouseEnter={e => { e.currentTarget.style.background = C.goldLight; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.transform = "translateY(0)"; }}>
-            Rejoindre →
-          </button>
-        </div>
-      </nav>
-
-      {/* HERO */}
-      <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "0 4rem 5rem", position: "relative", overflow: "hidden" }}>
-        <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(200,169,110,0.04) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: `linear-gradient(to top, ${C.bg}, transparent)`, pointerEvents: "none" }} />
-
-        {/* Eyebrow */}
-        <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: C.gold, marginBottom: "2rem", display: "flex", alignItems: "center", gap: 16, opacity: loaded ? 1 : 0, transition: "opacity 0.8s 0.5s", position: "relative" }}>
-          <div style={{ width: 40, height: 1, background: C.gold, animation: loaded ? "lineGrow 0.8s 0.5s ease both" : "none" }} />
-          Beta — Accès anticipé
-        </div>
-
-        {/* Main title — typewriter */}
-        <h1 style={{ fontFamily: F.serif, fontSize: "clamp(52px, 8vw, 108px)", fontWeight: 300, lineHeight: 1.0, letterSpacing: "-0.02em", maxWidth: 900, position: "relative", zIndex: 1, marginBottom: "3rem" }}>
-          {heroText.split("").map((char, i) => (
-            <span key={i} style={{ opacity: i < displayedChars ? 1 : 0, color: char === "." ? C.gold : i > 14 && i < 21 ? C.gold : C.white, transition: "opacity 0.1s", fontStyle: i >= 11 ? "italic" : "normal" }}>
-              {char}
-            </span>
-          ))}
-          <span style={{ display: "inline-block", width: 3, height: "0.8em", background: C.gold, marginLeft: 4, verticalAlign: "middle", animation: displayedChars >= heroText.length ? "shimmer 1s infinite" : "none", opacity: displayedChars >= heroText.length ? 1 : 0 }} />
-        </h1>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", paddingTop: "2rem", borderTop: `1px solid ${C.border}`, flexWrap: "wrap", gap: "2rem", opacity: loaded ? 1 : 0, transition: "opacity 0.8s 1.5s", position: "relative", zIndex: 1 }}>
-          <p style={{ fontSize: 15, fontWeight: 300, color: C.muted, maxWidth: 380, lineHeight: 1.8 }}>
-            LetMeWork connecte les talents motivés avec les entreprises qui cherchent le vrai match — pas juste le bon profil sur le papier.
-          </p>
-          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-            <button onClick={() => onEnter("signup")} style={{ background: C.gold, border: "none", color: C.bg, padding: "14px 36px", borderRadius: 2, fontSize: 14, fontFamily: F.sans, fontWeight: 500, cursor: "none", transition: "all 0.3s", letterSpacing: "0.02em" }}
-              onMouseEnter={e => { e.currentTarget.style.background = C.goldLight; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(200,169,110,0.25)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
-              Je veux tester →
-            </button>
-            <button onClick={() => onEnter("login")} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, padding: "14px 28px", borderRadius: 2, fontSize: 14, fontFamily: F.sans, cursor: "none", transition: "all 0.3s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = C.white; e.currentTarget.style.color = C.white; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}>
-              Se connecter
-            </button>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: "flex", gap: "4rem", marginTop: "4rem", opacity: loaded ? 1 : 0, transition: "opacity 0.8s 1.8s", position: "relative", zIndex: 1, flexWrap: "wrap" }}>
-          {[["73%", "des recrutements ratent à cause d'un mauvais fit"], ["2×", "plus de chances avec une mise en situation concrète"], ["0", "expérience requise pour montrer ton potentiel"]].map(([n, l]) => (
-            <div key={n} style={{ borderLeft: `1px solid ${C.gold}`, paddingLeft: "1.25rem" }}>
-              <div style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 300, color: C.gold, lineHeight: 1 }}>{n}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 6, maxWidth: 160, lineHeight: 1.6 }}>{l}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* MARQUEE */}
-      <div style={{ overflow: "hidden", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "1rem 0", background: C.bg2 }}>
-        <div style={{ display: "flex", animation: "marquee 35s linear infinite", width: "max-content" }}>
-          {[...marqueeItems, ...marqueeItems].map((item, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: "2rem", padding: "0 2rem", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.muted, whiteSpace: "nowrap" }}>
-              {item}
-              <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.gold, opacity: 0.4 }} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* PROBLEM */}
-      <section style={{ padding: "10rem 4rem", background: C.bg }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "1fr 1fr", gap: "6rem", alignItems: "start" }}>
-          <div style={{ position: window.innerWidth < 768 ? "static" : "sticky", top: "8rem" }}>
-            <div ref={rref("pb-eye")} style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: 12, ...rev("pb-eye") }}>
-              <div style={{ width: 24, height: 1, background: C.gold }} />Le vrai problème
-            </div>
-            <h2 ref={rref("pb-title")} style={{ fontFamily: F.serif, fontSize: "clamp(32px, 4vw, 52px)", fontWeight: 300, lineHeight: 1.05, letterSpacing: "-0.02em", color: C.white, ...rev("pb-title", 0.1) }}>
-              Les sites d'emploi filtrent.<br />Ils ne <em style={{ fontStyle: "italic", color: C.gold }}>révèlent</em> pas.
-            </h2>
-          </div>
-          <div>
-            {[
-              ["01", "Les algorithmes éliminent les bons profils", "Un mot-clé manquant et ton dossier part à la poubelle — avant même qu'un humain le lise."],
-              ["02", "Le cercle vicieux de l'expérience", "Pas d'expérience → pas de job → pas d'expérience. Impossible d'entrer dans la boucle sans la bonne case cochée."],
-              ["03", "Le bon profil, la mauvaise personne", "Embauché sur le CV, licencié pour le caractère. Tout le monde perd du temps sur des erreurs de casting évitables."],
-            ].map(([n, title, text], i) => (
-              <div key={n} ref={rref(`pb-${i}`)} style={{ padding: "2rem 0", borderBottom: `1px solid ${C.border}`, display: "grid", gridTemplateColumns: "2rem 1fr", gap: "1.5rem", ...rev(`pb-${i}`, i * 0.12), transition: "border-color 0.3s" }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(200,169,110,0.3)"}
-                onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
-                <div style={{ fontFamily: F.serif, fontSize: 13, color: C.gold, paddingTop: 2 }}>{n}</div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 500, color: C.white, marginBottom: 8 }}>{title}</div>
-                  <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.75, fontWeight: 300 }}>{text}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HISTOIRE */}
-      <section style={{ padding: "10rem 4rem", background: C.bg2, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(200,169,110,0.04) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ maxWidth: 720, margin: "0 auto", position: "relative" }}>
-          <div ref={rref("h-eye")} style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: 12, ...rev("h-eye") }}>
-            <div style={{ width: 24, height: 1, background: C.gold }} />Pourquoi LetMeWork
-          </div>
-          <h2 ref={rref("h-title")} style={{ fontFamily: F.serif, fontSize: "clamp(32px, 4vw, 56px)", fontWeight: 300, lineHeight: 1.05, letterSpacing: "-0.02em", color: C.white, marginBottom: "3rem", ...rev("h-title", 0.1) }}>
-            Une idée née d'une<br /><em style={{ fontStyle: "italic", color: C.gold }}>frustration personnelle.</em>
-          </h2>
-          <div ref={rref("h-text")} style={{ ...rev("h-text", 0.2) }}>
-            {[
-              "Je m'appelle Kévin. Et comme beaucoup, j'ai vécu cette situation : envoyer des candidatures, attendre, ne jamais avoir de retour. Pas parce que je n'avais rien à apporter — mais parce que mon profil ne cochait pas les bonnes cases.",
-              "J'ai réalisé que le problème n'était pas les candidats. C'était le système. Des algorithmes qui filtrent sur des mots-clés, des recruteurs qui cherchent 5 ans d'expérience pour un premier poste, des gens ultra-motivés qui passent entre les mailles.",
-              "Alors j'ai eu cette idée simple : et si on jugeait les gens sur ce qu'ils sont capables de faire, pas sur ce qu'ils ont déjà fait ?",
-            ].map((para, i) => (
-              <p key={i} style={{ fontSize: 15, color: i === 2 ? C.white : C.muted, lineHeight: 1.9, fontWeight: 300, marginBottom: "1.5rem", fontStyle: i === 2 ? "italic" : "normal", fontFamily: i === 2 ? F.serif : F.sans, fontSize: i === 2 ? 20 : 15, borderLeft: i === 2 ? `2px solid ${C.gold}` : "none", paddingLeft: i === 2 ? "1.5rem" : 0 }}>{para}</p>
-            ))}
-          </div>
-          <div ref={rref("h-sig")} style={{ marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1.5rem", ...rev("h-sig", 0.3) }}>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: C.white }}>Bellaïche Kévin</div>
-              <div style={{ fontSize: 12, color: C.gold, marginTop: 3, letterSpacing: "0.06em" }}>Fondateur, LetMeWork</div>
-            </div>
-            <button onClick={() => onEnter("signup")} style={{ background: "transparent", border: `1px solid ${C.gold}`, color: C.gold, padding: "10px 24px", borderRadius: 2, fontSize: 13, fontFamily: F.sans, cursor: "none", transition: "all 0.3s" }}
-              onMouseEnter={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.color = C.bg; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.gold; }}>
-              Rejoindre l'aventure →
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA FINAL */}
-      <section style={{ padding: "10rem 4rem", background: C.bg, textAlign: "center", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 60% 60% at 50% 100%, rgba(200,169,110,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div ref={rref("cta")} style={{ maxWidth: 600, margin: "0 auto", position: "relative", ...rev("cta") }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, marginBottom: "2rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
-            <div style={{ width: 24, height: 1, background: C.gold }} />Rejoins-nous<div style={{ width: 24, height: 1, background: C.gold }} />
-          </div>
-          <h2 style={{ fontFamily: F.serif, fontSize: "clamp(40px, 6vw, 72px)", fontWeight: 300, letterSpacing: "-0.02em", lineHeight: 1.0, marginBottom: "1.5rem", color: C.white }}>
-            Prêt à montrer ce que tu <em style={{ fontStyle: "italic", color: C.gold }}>vaux vraiment ?</em>
-          </h2>
-          <p style={{ fontSize: 15, color: C.muted, fontWeight: 300, lineHeight: 1.8, marginBottom: "3rem" }}>
-            Rejoins LetMeWork et découvre un recrutement basé sur qui tu es, pas sur ce que tu as fait.
-          </p>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={() => onEnter("signup")} style={{ background: C.gold, border: "none", color: C.bg, padding: "15px 40px", borderRadius: 2, fontSize: 14, fontFamily: F.sans, fontWeight: 500, cursor: "none", transition: "all 0.3s", letterSpacing: "0.02em" }}
-              onMouseEnter={e => { e.currentTarget.style.background = C.goldLight; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(200,169,110,0.3)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = C.gold; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
-              Je cherche un emploi →
-            </button>
-            <button onClick={() => onEnter("signup")} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, padding: "15px 40px", borderRadius: 2, fontSize: 14, fontFamily: F.sans, cursor: "none", transition: "all 0.3s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = C.white; e.currentTarget.style.color = C.white; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}>
-              Je recrute
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer style={{ padding: "1.5rem 4rem", background: C.bg2, borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-        <div style={{ fontFamily: F.serif, fontSize: 18, fontWeight: 300, color: C.white }}>
-          Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
-        </div>
-        <div style={{ fontSize: 11, color: "rgba(245,243,238,0.2)", letterSpacing: "0.06em" }}>Conçu par Bellaïche Kévin</div>
-      </footer>
-
-    </div>
-  );
-}
-
-// ─── APP ──────────────────────────────────────────────────────────────────────
-
 export default function App() {
-  const [screen, setScreen] = useState("landing"); // landing | auth | app
+  const [screen, setScreen] = useState("landing");
   const [user, setUser] = useState(null);
   const [page, setPage] = useState("dashboard");
   const [jobs, setJobs] = useState(DEFAULT_JOBS);
 
-  function handleEnter(mode) {
-  setScreen(mode === "login" ? "login" : "auth");
-}
-
-  function handleLogin(userData) {
-    setUser(userData);
-    setScreen("app");
-    setPage("dashboard");
-  }
-
-  function handleLogout() {
-    setUser(null);
-    setScreen("landing");
-    setPage("dashboard");
-  }
-
-  function handleScoreUpdate(score, answers) {
-    setUser(p => ({ ...p, globalScore: score, challengeAnswers: answers }));
-  }
-
+  function handleEnter(mode) { setScreen(mode === "login" ? "login" : "auth"); }
+  function handleLogin(userData) { setUser(userData); setScreen("app"); setPage("dashboard"); }
+  function handleLogout() { setUser(null); setScreen("landing"); }
+  function handleScoreUpdate(score, answers) { setUser(p => ({ ...p, globalScore: score, challengeAnswers: answers })); }
   function handleApply(jobId) {
     setUser(p => ({ ...p, applications: [...(p.applications || []), jobId] }));
     setJobs(p => p.map(j => j.id === jobId ? { ...j, applications: (j.applications || 0) + 1 } : j));
   }
-
-  function handlePublish(job) {
-    setJobs(p => [...p, job]);
-    setPage("offres");
-  }
-
-  function handleProfileUpdate(data) {
-    setUser(p => ({ ...p, ...data }));
-  }
+  function handlePublish(job) { setJobs(p => [...p, job]); setPage("dashboard"); }
+  function handleProfileUpdate(data) { setUser(p => ({ ...p, ...data })); }
 
   if (screen === "landing") return <LandingPage onEnter={handleEnter} />;
   if (screen === "login") return <LoginScreen onComplete={handleLogin} onSwitch={() => setScreen("auth")} onBack={() => setScreen("landing")} />;
@@ -1380,11 +1375,8 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", fontFamily: font.sans, background: G.paper }}>
-      <Sidebar user={user} page={page} setPage={setPage} onLogout={handleLogout} onHome={() => setScreen("landing")} />
-      <main style={{ flex: 1, overflow: "auto" }}>
-        {renderPage()}
-      </main>
-    </div>
+    <AppLayout user={user} page={page} setPage={setPage} onLogout={handleLogout} onHome={() => setScreen("landing")}>
+      {renderPage()}
+    </AppLayout>
   );
 }
