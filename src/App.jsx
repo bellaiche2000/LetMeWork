@@ -604,7 +604,7 @@ function LandingPage({ onEnter }) {
           <div style={{ fontFamily: F.serif, fontSize: 18, color: C.white }}>
             Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
           </div>
-          <div style={{ position: "static", <div style={{ fontSize: 11, color: "rgba(240,238,232,0.2)", fontFamily: F.sans }}>Conçu par Bellaïche Kévin</div>
+          <div style={{ fontSize: 11, color: "rgba(240,238,232,0.2)", fontFamily: F.sans }}>Conçu par Bellaïche Kévin</div>
         </footer>
       </div>
     </PageShell>
