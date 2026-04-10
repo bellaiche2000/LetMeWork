@@ -317,7 +317,7 @@ function AppLayout({ user, page, setPage, onLogout, onHome, children }) {
           </div>
         </div>
         {/* Main */}
-        <main style={{ flex: 1, overflow: "auto", background: "rgba(7,7,10,0.6)", backdropFilter: "blur(8px)" }}>
+        <main style={{ flex: 1, overflow: "auto", minWidth: 0, width: window.innerWidth < 768 ? "100%" : "auto", background: "rgba(7,7,10,0.6)", backdropFilter: "blur(8px)" }}>
           {children}
         </main>
       </div>
@@ -789,7 +789,7 @@ function CandidatDashboard({ user, jobs, onNavigate }) {
   const score = user.globalScore || 0;
   const applied = user.applications?.length || 0;
   return (
-    <div style={{ padding: "2.5rem 3rem", maxWidth: 900 }}>
+    <div style={{ padding: window.innerWidth < 768 ? "1.5rem 1rem" : "2.5rem 3rem", maxWidth: 900 }}>
       <div style={s.eyebrow}><div style={{ width: 16, height: 1, background: C.gold }} />Bonjour, {user.name?.split(" ")[0]}</div>
       <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 300, letterSpacing: -1, marginBottom: "2.5rem", color: C.white }}>Tableau de bord</h1>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: "2rem" }}>
