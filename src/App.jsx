@@ -429,11 +429,11 @@ function LandingPage({ onEnter }) {
 
           <h1 style={{ fontFamily: F.serif, fontSize: "clamp(48px, 9vw, 120px)", fontWeight: 300, lineHeight: 0.95, letterSpacing: "-0.02em", maxWidth: 900, marginBottom: "2rem", position: "relative" }}>
             {heroText.split("").map((char, i) => (
-              <span key={i} style={{ opacity: i < displayedChars ? 1 : 0, color: i > 13 ? C.gold : C.white, transition: "opacity 0.1s", fontStyle: i > 5 ? "italic" : "normal" }}>
+              <span key={i} style={{ opacity: i < displayedChars ? 1 : 0, color: i >= 11 ? C.gold : C.white, transition: "opacity 0.1s", fontStyle: i > 5 ? "italic" : "normal" }}>
                 {char}
               </span>
             ))}
-            <span style={{ display: "inline-block", width: 3, height: "0.75em", background: C.gold, marginLeft: 4, verticalAlign: "middle", animation: displayedChars >= heroText.length ? "blink 1s infinite" : "none", opacity: displayedChars >= heroText.length ? 1 : 0 }} />
+            <span style={{ display: "inline-block", width: 3, height: "0.75em", background: C.gold, marginLeft: 4, verticalAlign: "middle", animation: displayedChars >= heroText.length ? "blink 1s infinite" : "none", display: "none" }} />
           </h1>
 
           <p style={{ fontFamily: F.serif, fontSize: "clamp(18px, 2.5vw, 26px)", fontWeight: 300, fontStyle: "italic", color: C.muted, maxWidth: 600, lineHeight: 1.7, marginBottom: "3rem", opacity: loaded ? 1 : 0, transition: "opacity 1s 1.5s" }}>
@@ -698,6 +698,9 @@ function OnboardingScreen({ onComplete, onBack }) {
             Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
           </div>
           <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, marginBottom: "1.5rem" }}>Beta — Accès anticipé</div>
+          <div style={{ fontFamily: F.serif, fontSize: "clamp(36px, 5vw, 64px)", fontWeight: 300, color: C.white, letterSpacing: "-0.02em", marginBottom: "1rem", marginTop: "1rem" }}>
+  Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
+</div>
           <h1 style={{ fontFamily: F.serif, fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 300, letterSpacing: "-1px", lineHeight: 1.05, marginBottom: "1rem", color: C.white }}>
             Bienvenue sur<br /><em style={{ fontStyle: "italic", color: C.gold }}>LetMeWork</em>
           </h1>
