@@ -548,7 +548,7 @@ function LandingPage({ onEnter }) {
               {[
                 "Je m'appelle Kévin. Et comme beaucoup, j'ai vécu cette situation : envoyer des candidatures, attendre, ne jamais avoir de retour. Pas parce que je n'avais rien à apporter — mais parce que mon profil ne cochait pas les bonnes cases.",
                 "J'ai réalisé que le problème n'était pas les candidats. C'était le système. Des algorithmes qui filtrent sur des mots-clés, des recruteurs qui cherchent 5 ans d'expérience pour un premier poste.",
-                "Et si on jugeait les gens sur ce qu'ils sont capables de faire, pas sur ce qu'ils ont déjà fait ?",
+                "Je me suis donc posé la question :Et si on jugeait les gens sur ce qu'ils sont capables de faire, pas sur ce qu'ils ont déjà fait ?",
               ].map((para, i) => (
                 <p key={i} style={{
                   fontSize: i === 2 ? 22 : 15, color: i === 2 ? C.white : C.muted,
