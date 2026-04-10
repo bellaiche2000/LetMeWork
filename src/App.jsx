@@ -64,6 +64,15 @@ const DEFAULT_JOBS = [
   },
 ];
 
+const MOTIVATION_QUESTIONS = [
+  { id: "mot1", question: "Pourquoi toi et pas quelqu'un d'autre ? Qu'est-ce qui te rend unique pour ce poste ?", type: "text" },
+  { id: "mot2", question: "Pourquoi est-ce que tu veux rejoindre cette entreprise en particulier ? Qu'est-ce qui t'attire chez elle ?", type: "text" },
+  { id: "mot3", question: "Qu'est-ce que tu peux apporter à l'équipe que tu rejoins ?", type: "text" },
+  { id: "mot4", question: "Qu'est-ce qu'on peut t'apporter que tu n'as pas encore eu la chance d'avoir ailleurs ?", type: "text" },
+  { id: "mot5", question: "Tu n'as pas encore d'expérience dans ce domaine. Qu'est-ce qui te fait penser que tu peux y exceller ?", type: "text" },
+  { id: "mot6", question: "Décris un moment dans ta vie — pas forcément professionnel — où tu as dû apprendre quelque chose de difficile. Comment tu t'en es sorti ?", type: "text" },
+  { id: "mot7", question: "Dans 3 ans, tu te vois où ? Et comment ce poste t'aide à y arriver ?", type: "text" },
+];
 const VALUES_QUESTIONS = [
   { id: "val1", question: "Dans une équipe, tu es plutôt...", options: ["Celui qui structure et organise", "Celui qui propose des idées", "Celui qui avance et exécute", "Celui qui crée du lien"] },
   { id: "val2", question: "Face à un échec, tu...", options: ["Analyses ce qui s'est passé", "Passes rapidement à autre chose", "En parles à ton équipe", "Te remets en question en profondeur"] },
@@ -841,7 +850,7 @@ function CandidatDashboard({ user, jobs, onNavigate }) {
 
 function ChallengesPage({ user, onScoreUpdate }) {
   const challenges = LMW_CHALLENGES[user.sector] || LMW_CHALLENGES["Marketing"];
-  const allChallenges = [...challenges, ...VALUES_QUESTIONS.slice(0, 2)];
+  const allChallenges = [...challenges, ...MOTIVATION_QUESTIONS.slice(0, 2), ...VALUES_QUESTIONS.slice(0, 2)];
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState(user.challengeAnswers || {});
   const [done, setDone] = useState(user.globalScore ? true : false);
