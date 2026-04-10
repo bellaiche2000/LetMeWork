@@ -1041,7 +1041,7 @@ function LandingPage({ onEnter }) {
         <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: G.muted, marginBottom: "2rem", display: "flex", alignItems: "center", gap: 12, opacity: 1 }}>
           <div style={{ width: 32, height: 1, background: G.muted }} />Beta — Accès anticipé
         </div>
-        <h1 style={{ fontFamily: font.serif, fontSize: "clamp(56px, 9vw, 110px)", lineHeight: 0.92, letterSpacing: -2, maxWidth: 900, opacity: 1 }}>
+        <h1 style={{ fontFamily: font.serif, fontSize: "clamp(56px, 9vw, 110px)", lineHeight: 0.92, letterSpacing: -2, maxWidth: 900, opacity: 1, color: G.ink}}>
           Le potentiel<br />avant <em style={{ fontStyle: "italic", color: G.muted }}>le papier.</em>
         </h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid rgba(17,17,16,0.1)`, opacity: 1, flexWrap: "wrap", gap: "2rem" }}>
@@ -1088,7 +1088,7 @@ function LandingPage({ onEnter }) {
           <div ref={ref("pb-eye")} style={{ ...s.eyebrow, ...anim("pb-eye") }}>
             <div style={{ width: 24, height: 1, background: G.muted }} />Le vrai problème
           </div>
-          <h2 ref={ref("pb-title")} style={{ fontFamily: font.serif, fontSize: "clamp(32px, 4vw, 48px)", lineHeight: 1.05, letterSpacing: -1, ...anim("pb-title", 0.1) }}>
+          <h2 ref={ref("pb-title")} style={{ fontFamily: font.serif, fontSize: "clamp(32px, 4vw, 48px)", lineHeight: 1.05, letterSpacing: -1, color: G.ink, ...anim("pb-title", 0.1) }}>
             Les sites d'emploi filtrent.<br />Ils ne <em style={{ fontStyle: "italic", color: G.muted }}>révèlent</em> pas.
           </h2>
         </div>
@@ -1113,7 +1113,7 @@ function LandingPage({ onEnter }) {
       <section style={{ padding: "8rem 4rem", background: G.ink, color: G.paper }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <div ref={ref("h-eye")} style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(247,245,240,0.3)", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: 10, ...anim("h-eye") }}>
-            <div style={{ width: 24, height: 1, background: "rgba(247,245,240,0.2)" }} />Pourquoi LetMeWork
+            <div style={{ width: 24, height: 1, background: "rgba(64, 63, 61, 0.2)" }} />Pourquoi LetMeWork
           </div>
           <h2 ref={ref("h-title")} style={{ fontFamily: font.serif, fontSize: "clamp(32px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: -1, color: G.paper, marginBottom: "2.5rem", ...anim("h-title", 0.1) }}>
             Une idée née d'une<br /><em style={{ fontStyle: "italic", color: "rgba(247,245,240,0.35)" }}>frustration personnelle.</em>
