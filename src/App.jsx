@@ -1145,7 +1145,7 @@ function LandingPage({ onEnter }) {
       {/* CTA FINAL */}
       <section style={{ padding: "8rem 4rem", textAlign: "center", background: G.paper }}>
         <div ref={ref("cta")} style={{ maxWidth: 560, margin: "0 auto", ...anim("cta") }}>
-          <h2 style={{ fontFamily: font.serif, fontSize: "clamp(36px, 5vw, 60px)", letterSpacing: -1.5, lineHeight: 1.05, marginBottom: "1rem" }}>
+          <h2 style={{ fontFamily: font.serif, fontSize: "clamp(36px, 5vw, 60px)", letterSpacing: -1.5, lineHeight: 1.05, marginBottom: "1rem", color: G.ink }}>
             Prêt à montrer ce que tu <em style={{ fontStyle: "italic", color: G.muted }}>vaux vraiment ?</em>
           </h2>
           <p style={{ fontSize: 15, color: G.muted, fontWeight: 300, lineHeight: 1.7, marginBottom: "2.5rem" }}>Rejoins LetMeWork et découvre un recrutement basé sur qui tu es, pas sur ce que tu as fait.</p>
