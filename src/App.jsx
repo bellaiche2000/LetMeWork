@@ -259,7 +259,12 @@ function PageShell({ children, user, onLogout, onHome }) {
         select option { background: #13131a; color: #f0eee8; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: ${C.bg}; }
-        ::-webkit-scrollbar-thumb { background: ${C.borderGold}; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: ${C.borderGold}; border-radius: 2px; } @media (max-width: 768px) {
+  .lmw-sidebar { display: none !important; }
+  .lmw-main { width: 100vw !important; max-width: 100vw !important; padding: 1.5rem 1rem !important; }
+  .lmw-nav { display: flex !important; }
+}
+.lmw-nav { display: none; }
       `}</style>
     </div>
   );
@@ -276,7 +281,7 @@ function AppLayout({ user, page, setPage, onLogout, onHome, children }) {
     <PageShell user={user} onLogout={onLogout} onHome={onHome}>
       <div style={{ display: "flex", minHeight: "100vh" }}>
         {/* Sidebar */}
-        <div style={{ width: 220, minHeight: "100vh", background: "rgba(7,7,10,0.95)", backdropFilter: "blur(20px)", borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", padding: "1.5rem 0", flexShrink: 0, position: "sticky", top: 0, height: "100vh" }}>
+        <div className="lmw-sidebar" style={{ width: 220, minHeight: "100vh", background: "rgba(7,7,10,0.95)", backdropFilter: "blur(20px)", borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", padding: "1.5rem 0", flexShrink: 0, position: "sticky", top: 0, height: "100vh" }}>
           <div style={{ padding: "0 1.5rem 1.5rem", borderBottom: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: F.serif, fontSize: 20, color: C.white }}>
               Let<em style={{ fontStyle: "italic", color: C.gold }}>Me</em>Work
@@ -317,7 +322,7 @@ function AppLayout({ user, page, setPage, onLogout, onHome, children }) {
           </div>
         </div>
         {/* Main */}
-        <main style={{ flex: 1, overflow: "auto", minWidth: 0, width: window.innerWidth < 768 ? "100%" : "auto", background: "rgba(7,7,10,0.6)", backdropFilter: "blur(8px)" }}>
+        <main className="lmw-main" style={{ flex: 1, overflow: "auto", minWidth: 0, width: window.innerWidth < 768 ? "100%" : "auto", background: "rgba(7,7,10,0.6)", backdropFilter: "blur(8px)" }}>
           {children}
         </main>
       </div>
@@ -1380,6 +1385,20 @@ export default function App() {
   return (
     <AppLayout user={user} page={page} setPage={setPage} onLogout={handleLogout} onHome={() => setScreen("landing")}>
       {renderPage()}
+      <div className="lmw-nav" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(7,7,10,0.97)", backdropFilter: "blur(20px)", borderTop: `1px solid ${C.border}`, display: "none", zIndex: 100, padding: "0.5rem 0" }}>
+  {(user.mode === "candidat"
+    ? [["dashboard","Accueil"],["defis","Défis"],["offres","Offres"],["profil","Profil"]]
+    : [["dashboard","Accueil"],["offres","Offres"],["candidats","Candidats"],["nouvelle-offre","Créer"]]
+  ).map(([k, label]) => (
+    <button key={k} onClick={() => setPage(k)} style={{
+      flex: 1, background: "none", border: "none",
+      color: page === k ? C.gold : C.muted,
+      fontSize: 11, fontFamily: F.sans, cursor: "pointer", padding: "8px 4px",
+      borderTop: page === k ? `2px solid ${C.gold}` : "2px solid transparent",
+      transition: "all 0.2s",
+    }}>{label}</button>
+  ))}
+</div>
     </AppLayout>
   );
 }
