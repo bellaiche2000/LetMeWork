@@ -485,9 +485,9 @@ function LandingPage({ onEnter }) {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
               {[
-                ["01", "Les algorithmes éliminent les bons profils", "Un mot-clé manquant et ton dossier part à la poubelle — avant même qu'un humain le lise."],
-                ["02", "Le cercle vicieux de l'expérience", "Pas d'expérience → pas de job → pas d'expérience. Impossible d'entrer dans la boucle sans la bonne case cochée."],
-                ["03", "Le bon profil, la mauvaise personne", "Embauché sur le CV, licencié pour le caractère. Tout le monde perd du temps sur des erreurs évitables."],
+                ["1", "Les algorithmes éliminent les bons profils", "Un mot-clé manquant et ton dossier part à la poubelle — avant même qu'un humain le lise."],
+                ["2", "Le cercle vicieux de l'expérience", "Pas d'expérience → pas de job → pas d'expérience. Impossible d'entrer dans la boucle sans la bonne case cochée."],
+                ["3", "Le bon profil, la mauvaise personne", "Embauché sur le CV, licencié pour le caractère. Tout le monde perd du temps sur des erreurs évitables."],
               ].map(([n, title, text], i) => (
                 <div key={n} ref={rr(`pb${i + 1}`)} style={{ ...s.card, ...rv(`pb${i + 1}`, i * 0.15), transition: `all 0.9s ${i * 0.15}s cubic-bezier(0.4,0,0.2,1), border-color 0.3s` }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = C.borderGold}
